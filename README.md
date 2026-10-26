@@ -19,7 +19,7 @@ That's it. No accounts or keys are required — features that need one switch th
 | Feature | Status | Notes |
 |---|---|---|
 | Landing page, project input, examples, settings | Working | Browser-tested |
-| Project analysis (editable, regenerate from edits) | Working | Uses a **built-in rule-based engine** unless you add an Anthropic key. Labelled in the UI. |
+| Project analysis (editable, regenerate from edits) | Working | Uses a **built-in rule-based engine** unless `GEMINI_API_KEY` is set. Labelled in the UI. |
 | Three directions: compare, select, regenerate one | Working | Selected direction steers references, assets, moodboards, handoff |
 | Typography explorer | Working | ~40 real Google Fonts, curated tags (labelled "curated"), live previews, copyable CSS / `<link>` |
 | Color studio | Working | Edit/lock/replace colors, WCAG contrast (unit-tested), light/dark preview, gradients, CSS / JSON / W3C tokens / Tailwind export |
@@ -27,7 +27,7 @@ That's it. No accounts or keys are required — features that need one switch th
 | Brand & logo concepts | Working with limits | Brand names to research + search links; original logo concept *descriptions* and prompts. **No image generation is connected.** |
 | Icons / illustrations / images | Working with limits | Curated real libraries with licences. Live icon search (Iconify) and Unsplash photos need network/key (see below). |
 | Moodboards | Working | Create from direction, drag to rearrange, add/remove, compare two, export JSON/Markdown |
-| Design assistant | Working | Offline rule-based unless Anthropic key is set; can take actions (alt palettes, "more premium") |
+| Design assistant | Working | Offline rule-based unless `GEMINI_API_KEY` is set; can take actions (alt palettes, "more premium") |
 | Global search (Ctrl/Cmd+K) | Working | Transparent scoring (title match 3, other 1) |
 | Developer handoff | Working | Brief (Markdown), CSS, tokens, Tailwind v4 theme, font setup; copy + download |
 | My Projects | Working | Search, filter, favorite, rename, duplicate, delete with confirmation |
@@ -41,14 +41,14 @@ I also drove the real UI with a browser script (40 checks: generate → edit →
 
 | Key | Unlocks | Cost |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Real AI analysis + assistant (console.anthropic.com) | Pay per use |
+| `GEMINI_API_KEY` | Real AI analysis + assistant using Google Gemini (aistudio.google.com/apikey) | Free tier available; limits set by Google |
 | `GOOGLE_FONTS_API_KEY` | Live font popularity & last-updated | Free |
 | `BRAVE_SEARCH_API_KEY` | Real ranked web results in References | Free tier available |
 | `UNSPLASH_ACCESS_KEY` | Live photo previews with attribution | Free demo tier (50 requests/hour) |
 
 Keys stay on the server. Restart `npm run dev` after editing `.env.local`.
 
-> **Not verified in my build environment:** the Anthropic, Brave, Google Fonts, Unsplash and Iconify integrations. My sandbox has no keys, and blocked some of those hosts. Their code paths are written and their *input/output handling is tested*, but **please test each with your own key** and tell me if anything misbehaves. The link verifier ("Verify link") was tested only for its safety checks, not against live sites.
+> **Not verified in my build environment:** the Gemini, Brave, Google Fonts, Unsplash and Iconify integrations. My sandbox has no keys, and blocked some of those hosts. Their code paths are written and their *input/output handling is tested*, but **please test each with your own key** and tell me if anything misbehaves. The link verifier ("Verify link") was tested only for its safety checks, not against live sites.
 
 ## Sharing, honestly
 
@@ -79,3 +79,13 @@ tests/             npm test
 ## Deploying later
 
 `npm run build && npm run start` runs a production server. On Vercel, set the same environment variables in project settings plus `NEXT_PUBLIC_SITE_URL`, and replace the share store first (see above).
+
+## Gemini AI: how to verify it on Vercel
+
+1. In Vercel → your project → **Settings → Environment Variables**, confirm `GEMINI_API_KEY` exists for **Production** (and Preview if you use it). Don't prefix it with `NEXT_PUBLIC_`.
+2. **Redeploy** (env var changes only apply to new deployments): Deployments tab → ⋯ on the latest → **Redeploy**.
+3. Open `https://YOUR-SITE/api/ai-status` — it should show `"configured": true` (the key is never shown).
+4. Open `https://YOUR-SITE/api/ai-status?test=1` — makes one tiny real Gemini call. `"working": true` means the key and model work. Otherwise `message` explains why (invalid key, free quota used up, etc.).
+5. Generate a project. In the workspace the badge on **Analysis** says **AI-generated**. If it says **Generated locally**, a yellow notice explains the reason and the built-in engine was used.
+
+Default model: `gemini-2.5-flash` (stable, free-tier). Change with `GEMINI_MODEL`. The app never enables billing; if you hit the free quota it falls back to the built-in engine and says so.

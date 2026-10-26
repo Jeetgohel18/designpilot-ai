@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { aiResultSchema, analyzeLocal, fromAi } from "@/lib/engine/analyze";
-import { aiConfigured, claude, extractJson } from "@/lib/server/anthropic";
+import { AiError, aiConfigured, classifyError, extractJson, generate, logAiError, userMessage } from "@/lib/server/gemini";
 import { rateLimit, tooMany } from "@/lib/server/ratelimit";
 import { ROLES } from "@/lib/types";
 
@@ -14,6 +14,8 @@ const SYSTEM = `You are a senior design strategist. Analyse the project brief an
 "directions":[exactly 3 objects, each: {"name","summary","harmony","paletteName","paletteReasoning","colors":{${ROLES.map((r) => `"${r}":"#RRGGBB"`).join(",")}},"headingFont","bodyFont","fontRationale","imageStyle","illustrationStyle","iconStyle","logoDirection","uiInspiration":[],"principles":[],"components":[],"brandReferences":[]}]}
 Rules: the three directions must be clearly different. Fonts must be real Google Fonts family names. Colors are for a LIGHT theme; text on background must reach 7:1 contrast and primary on background 4.5:1. brandReferences are names of real, well-known brands in this industry for the designer to research — never URLs, never claims about their exact colors or fonts. Be specific to this brief; no generic filler.`;
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   const rl = rateLimit(req, "analyze", 12);
   if (!rl.ok) return tooMany(rl.retryAfter);
@@ -21,18 +23,24 @@ export async function POST(req: Request) {
   if (!parsed.success) return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
   const { brief, settings } = parsed.data;
 
-  let notice: string | null = null;
+  let notice: string;
+  let reason: string;
   if (aiConfigured()) {
     try {
-      const text = await claude(SYSTEM, `Brief: ${brief}\nSettings: ${JSON.stringify(settings)}`);
-      const result = fromAi(aiResultSchema.parse(extractJson(text)));
-      return Response.json({ source: "ai", ...result, notice: null });
+      const text = await generate({ system: SYSTEM, prompt: `Brief: ${brief}\nSettings: ${JSON.stringify(settings)}`, json: true, maxTokens: 8000 });
+      const result = aiResultSchema.safeParse(extractJson(text));
+      if (!result.success) throw new AiError("bad_output");
+      return Response.json({ source: "ai", provider: "gemini", ...fromAi(result.data), notice: null });
     } catch (err) {
-      notice = "The AI service didn't return a usable answer, so this analysis was generated locally instead.";
-      console.error("[analyze] AI failed:", err instanceof Error ? err.message : err);
+      const e = classifyError(err);
+      logAiError("analyze", e);
+      reason = e.kind;
+      notice = userMessage(e.kind, "analysis");
     }
   } else {
-    notice = "No AI key is configured, so this analysis comes from DesignPilot's built-in rule-based engine (keyword and industry matching). Add ANTHROPIC_API_KEY for full AI analysis.";
+    reason = "missing_key";
+    notice = userMessage("missing_key", "analysis");
   }
-  return Response.json({ source: "local", ...analyzeLocal(brief, settings), notice });
+  // Fallback: always labelled source:"local" so the UI never presents it as AI output.
+  return Response.json({ source: "local", fallbackReason: reason, ...analyzeLocal(brief, settings), notice });
 }

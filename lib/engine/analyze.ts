@@ -141,7 +141,7 @@ export function regenerateDirection(project: Project, directionId: string, rand:
   return d;
 }
 
-// ---------- AI output validation (used by /api/analyze when ANTHROPIC_API_KEY is set) ----------
+// ---------- AI output validation (used by /api/analyze when GEMINI_API_KEY is set) ----------
 const hex = z.string().transform((s, ctx) => { const h = normalizeHex(s); if (!h) { ctx.addIssue({ code: "custom", message: "bad hex" }); return z.NEVER; } return h; });
 const str = z.string().min(1).max(600);
 const list = (n = 8) => z.array(str).min(1).max(n);

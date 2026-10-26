@@ -9,7 +9,7 @@ import type { Project } from "@/lib/types";
 import type { AssistantAction } from "@/lib/engine/assistant";
 import { regenerateDirection } from "@/lib/engine/analyze";
 
-type Msg = { role: "user" | "assistant"; text: string; source?: "ai" | "local" };
+type Msg = { role: "user" | "assistant"; text: string; source?: "ai" | "local"; notice?: string | null };
 const SUGGESTIONS = ["Which font pairing best suits this brand?", "Suggest three alternative color palettes", "Make the design direction more premium", "Explain why these colors work together", "Recommend suitable icons", "Suggest a better hero-section layout", "Create a developer-ready design brief", "Refine the current moodboard"];
 
 export function Assistant({ project: p, goto, onClose }: { project: Project; goto: (t: string) => void; onClose: () => void }) {
@@ -46,7 +46,7 @@ export function Assistant({ project: p, goto, onClose }: { project: Project; got
       const res = await fetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: t, project: { ...p, bookmarks: [], activity: [], moodboards: [] } }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Assistant unavailable");
-      setMsgs((m) => [...m, { role: "assistant", text: data.reply, source: data.source }]);
+      setMsgs((m) => [...m, { role: "assistant", text: data.reply, source: data.source, notice: data.notice }]);
       if (data.action) apply(data.action);
     } catch (e) { setMsgs((m) => [...m, { role: "assistant", text: e instanceof Error ? e.message : "Something went wrong. Try again." }]); } finally { setBusy(false); }
   }
@@ -57,7 +57,7 @@ export function Assistant({ project: p, goto, onClose }: { project: Project; got
       <div className="scroll-thin flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
         {msgs.map((m, i) => (
           <div key={i} className={m.role === "user" ? "ml-8 rounded-xl bg-accent-soft px-3 py-2 text-sm" : "mr-4 text-sm leading-relaxed text-muted"}>
-            {m.text}{m.role === "assistant" && m.source && <span className="ml-2 align-middle"><Badge tone={m.source === "ai" ? "accent" : "neutral"}>{m.source === "ai" ? "AI" : "offline rules"}</Badge></span>}
+            {m.text}{m.role === "assistant" && m.source && <span className="ml-2 align-middle"><Badge tone={m.source === "ai" ? "accent" : "neutral"}>{m.source === "ai" ? "Gemini AI" : "offline fallback"}</Badge></span>}{m.notice && <span className="mt-1 block text-[11px] text-amber-200/80">{m.notice}</span>}
           </div>
         ))}
         {busy && <div className="skeleton h-10 w-2/3 rounded-lg" />}

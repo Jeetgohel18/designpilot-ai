@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { localAssistant } from "@/lib/engine/assistant";
-import { aiConfigured, claude } from "@/lib/server/anthropic";
+import { aiConfigured, classifyError, generate, logAiError, userMessage } from "@/lib/server/gemini";
 import { rateLimit, tooMany } from "@/lib/server/ratelimit";
 import { designBrief, directionOf } from "@/lib/engine/handoff";
 import type { Project } from "@/lib/types";
+
+export const maxDuration = 30;
 
 const body = z.object({
   message: z.string().trim().min(2).max(800),
@@ -18,14 +20,21 @@ export async function POST(req: Request) {
   const { message, project } = parsed.data;
   const local = localAssistant(message, project);
 
+  let notice: string | null = null;
   if (aiConfigured()) {
     try {
       const d = directionOf(project);
-      const reply = await claude(
-        "You are DesignPilot's design assistant embedded in a project workspace. Answer concisely (max ~150 words) using ONLY the project context. Give concrete, opinionated design advice. Never invent URLs, brands' exact hex values or statistics; say when something is a suggestion. Plain text, no markdown headings.",
-        `Project context:\n${designBrief(project).slice(0, 5000)}\n\nSelected direction palette: ${d ? JSON.stringify(d.palette.colors) : "none"}\n\nUser question: ${message}`, 700);
-      return Response.json({ source: "ai", reply, action: local.action });
-    } catch (e) { console.error("[assistant] AI failed:", e instanceof Error ? e.message : e); }
+      const reply = await generate({
+        system: "You are DesignPilot's design assistant embedded in a project workspace. Answer concisely (max ~150 words) using ONLY the project context. Give concrete, opinionated design advice. Never invent URLs, brands' exact hex values or statistics; say when something is a suggestion. Plain text, no markdown headings.",
+        prompt: `Project context:\n${designBrief(project).slice(0, 5000)}\n\nSelected direction palette: ${d ? JSON.stringify(d.palette.colors) : "none"}\n\nUser question: ${message}`,
+        maxTokens: 800, timeoutMs: 25_000,
+      });
+      return Response.json({ source: "ai", provider: "gemini", reply: reply.trim(), action: local.action });
+    } catch (err) {
+      const e = classifyError(err);
+      logAiError("assistant", e);
+      notice = userMessage(e.kind, "assistant");
+    }
   }
-  return Response.json({ source: "local", ...local });
+  return Response.json({ source: "local", ...local, notice });
 }

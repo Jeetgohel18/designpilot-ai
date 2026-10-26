@@ -40,7 +40,7 @@ export function localAssistant(message: string, project: Project): AssistantRepl
     return { reply: `Hero idea for ${d.name}: ${d.uiInspiration[0]}. Pair it with ${d.fonts.heading} at a very large size, one primary call-to-action in ${d.palette.colors.primary}, and ${d.imageStyle.split(",")[0].toLowerCase()}.`, action: { type: "none" } };
   if (/moodboard/.test(m))
     return { reply: "Open the Moodboard tab — use 'New from direction' to rebuild it from your selected direction, then drag cards to rearrange.", action: { type: "goto", tab: "moodboard" } };
-  return { reply: `I can help with: alternative palettes, font pairings, making the direction more premium, explaining the colors, a developer brief, icons, a hero layout, or the moodboard. (This is the offline assistant; add an Anthropic API key for open-ended answers.)`, action: { type: "none" } };
+  return { reply: `I can help with: alternative palettes, font pairings, making the direction more premium, explaining the colors, a developer brief, icons, a hero layout, or the moodboard. (This is the offline assistant; set GEMINI_API_KEY on the server for open-ended AI answers.)`, action: { type: "none" } };
 }
 
 export const briefFor = designBrief;
