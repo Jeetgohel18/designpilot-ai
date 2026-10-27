@@ -67,7 +67,7 @@ export function researchMarkdown(p: Project): string {
 Selected direction: ${p.selectedDirection && d ? d.name : "none selected yet"}
 
 ## Your saved references
-${saved.length ? saved.map((b) => `- [${b.title}](${b.url})${b.source ? ` — ${b.source}` : ""}`).join("\n") : "_Nothing bookmarked yet._"}
+${saved.length ? saved.map((b) => `- [${b.title}](${b.url})${b.source ? ` — ${b.source}` : ""}${b.refLabel ? ` (${{ live: "live result", shortcut: "search shortcut", curated: "curated" }[b.refLabel]}${b.category ? `, ${b.category}` : ""})` : ""}`).join("\n") : "_Nothing bookmarked yet._"}
 
 ## Search links (opens each source's own results; not verified by DesignPilot)
 ${referenceSearchLinks(kw).map((l) => `- [${l.name}](${l.url}) — ${l.note}`).join("\n")}

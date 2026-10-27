@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Blocks, Check, Code2, Compass, Download, FileText, Fingerprint, Image as ImageIcon, Images, Lightbulb, ListChecks, Menu, MessageSquare, Palette, Search, Share2, Type, X, Telescope } from "lucide-react";
+import { Blocks, Check, Code2, Compass, Download, FileText, Fingerprint, Image as ImageIcon, Images, Lightbulb, ListChecks, Menu, MessageSquare, Palette, Search, Share2, Type, X, Telescope, Layers } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Badge, Button, inputCls, Notice } from "@/components/ui";
 import { ShareSiteButton } from "@/components/SiteChrome";
@@ -13,6 +13,7 @@ import { OverviewTab } from "@/components/workspace/OverviewTab";
 import { DirectionsTab } from "@/components/workspace/DirectionsTab";
 import { TypographyTab } from "@/components/workspace/TypographyTab";
 import { ColorsTab } from "@/components/workspace/ColorsTab";
+import { SimilarTab } from "@/components/workspace/SimilarTab";
 import { ComponentsTab } from "@/components/workspace/ComponentsTab";
 import { StartTab } from "@/components/workspace/StartTab";
 import { BrainstormTab } from "@/components/workspace/BrainstormTab";
@@ -27,12 +28,12 @@ import { SearchDialog } from "@/components/workspace/SearchDialog";
 import { ShareDialog } from "@/components/workspace/ShareDialog";
 import type { Project } from "@/lib/types";
 
-type TabId = "overview" | "directions" | "moodboard" | "typography" | "colors" | "components" | "start" | "brainstorm" | "references" | "brand" | "assets" | "handoff" | "export";
+type TabId = "overview" | "directions" | "moodboard" | "typography" | "colors" | "components" | "start" | "brainstorm" | "references" | "similar" | "brand" | "assets" | "handoff" | "export";
 const NAV: { group: string; items: { id: TabId; label: string; icon: React.ReactNode; hint: string }[] }[] = [
   { group: "Understand", items: [{ id: "overview", label: "Overview", icon: <FileText size={16} />, hint: "What the analysis found" }, { id: "directions", label: "Creative directions", icon: <Compass size={16} />, hint: "Compare and choose" }] },
   { group: "Explore", items: [{ id: "moodboard", label: "Moodboard", icon: <Images size={16} />, hint: "Collect the look and feel" }, { id: "typography", label: "Typography", icon: <Type size={16} />, hint: "Fonts and pairings" }, { id: "colors", label: "Colors", icon: <Palette size={16} />, hint: "Palettes and contrast" }, { id: "components", label: "UI components", icon: <Blocks size={16} />, hint: "Live styled components" }] },
   { group: "Build", items: [{ id: "start", label: "Start designing", icon: <ListChecks size={16} />, hint: "Screens, journeys, checklist" }, { id: "brainstorm", label: "Brainstorming", icon: <Lightbulb size={16} />, hint: "Shape ideas into tasks" }] },
-  { group: "Resources", items: [{ id: "references", label: "Inspiration & research", icon: <Telescope size={16} />, hint: "Competitors and references" }, { id: "brand", label: "Logo & brand", icon: <Fingerprint size={16} />, hint: "Brand research, logo concepts" }, { id: "assets", label: "Images & assets", icon: <ImageIcon size={16} />, hint: "Photos, icons, illustrations" }] },
+  { group: "Resources", items: [{ id: "references", label: "Inspiration & research", icon: <Telescope size={16} />, hint: "Competitors and references" }, { id: "similar", label: "Similar references", icon: <Layers size={16} />, hint: "Real, project-specific references" }, { id: "brand", label: "Logo & brand", icon: <Fingerprint size={16} />, hint: "Brand research, logo concepts" }, { id: "assets", label: "Images & assets", icon: <ImageIcon size={16} />, hint: "Photos, icons, illustrations" }] },
   { group: "Deliver", items: [{ id: "handoff", label: "Developer handoff", icon: <Code2 size={16} />, hint: "CSS, tokens, brief" }, { id: "export", label: "Export & download", icon: <Download size={16} />, hint: "Files you can keep" }] },
 ];
 const IDS = NAV.flatMap((g) => g.items.map((i) => i.id));
@@ -129,12 +130,13 @@ function Workspace() {
           <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">
             <div className="mb-5 flex flex-wrap items-center gap-2 text-xs text-faint"><span>{NAV.find((g) => g.items.some((i) => i.id === tab))?.group}</span><span aria-hidden>/</span><span className="font-medium text-muted">{current.label}</span><span className="hidden sm:inline">— {current.hint}</span></div>
             {notice && (tab === "overview" || tab === "directions") && <div className="mb-5 flex items-start justify-between gap-3"><div className="flex-1"><Notice tone="warn">{notice}</Notice></div><button className="min-h-9 text-xs text-faint hover:text-fg" onClick={() => { setNotice(null); try { sessionStorage.removeItem("dp:notice:" + project.id); } catch { /* ignore */ } }}>Dismiss</button></div>}
-            {!["overview", "directions", "references", "assets", "export", "brainstorm"].includes(tab) && !project.selectedDirection && <div className="mb-5"><Notice>No direction selected yet — showing “{direction?.name}”. <button className="text-accent underline" onClick={() => setTab("directions")}>Choose one</button> to steer everything below.</Notice></div>}
+            {!["overview", "directions", "references", "similar", "assets", "export", "brainstorm"].includes(tab) && !project.selectedDirection && <div className="mb-5"><Notice>No direction selected yet — showing “{direction?.name}”. <button className="text-accent underline" onClick={() => setTab("directions")}>Choose one</button> to steer everything below.</Notice></div>}
             {tab === "overview" && <OverviewTab {...props} />}
             {tab === "directions" && <DirectionsTab {...props} />}
             {tab === "moodboard" && <MoodboardTab {...props} />}
             {tab === "typography" && <TypographyTab {...props} />}
             {tab === "colors" && <ColorsTab {...props} />}
+            {tab === "similar" && <SimilarTab {...props} />}
             {tab === "components" && <ComponentsTab key={project.selectedDirection ?? "none"} {...props} />}
             {tab === "start" && <StartTab {...props} />}
             {tab === "brainstorm" && <BrainstormTab {...props} />}

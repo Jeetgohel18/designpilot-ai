@@ -21,14 +21,15 @@ export async function GET(req: Request) {
     const res = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(q)}&count=15&safesearch=moderate`, { headers: { Accept: "application/json", "X-Subscription-Token": key }, signal: AbortSignal.timeout(8000) });
     if (res.status === 429) return Response.json({ configured: true, error: "Search rate limit reached. Try again shortly." }, { status: 429 });
     if (!res.ok) throw new Error(String(res.status));
-    const json = await res.json() as { web?: { results?: { title: string; url: string; description?: string; meta_url?: { hostname?: string }; page_age?: string }[] } };
+    const json = await res.json() as { web?: { results?: { title: string; url: string; description?: string; meta_url?: { hostname?: string }; page_age?: string; thumbnail?: { src?: string } }[] } };
     const DESIGN_HOSTS = /(awwwards|behance|dribbble|land-book|godly|mobbin|pageflows|lapa\.ninja|siteinspire|pinterest|medium|case)/;
     const results = (json.web?.results ?? []).map((r) => {
       const hay = `${r.title} ${r.description ?? ""} ${r.url}`.toLowerCase();
       const matched = keywords.filter((k) => hay.includes(k));
       const keywordShare = keywords.length ? matched.length / keywords.length : 0;
       const designBonus = DESIGN_HOSTS.test(r.meta_url?.hostname ?? r.url) ? 0.15 : 0;
-      return { title: r.title, url: r.url, description: r.description ?? "", host: r.meta_url?.hostname ?? new URL(r.url).hostname, age: r.page_age ?? null, matched, score: Math.min(1, +(keywordShare + designBonus).toFixed(2)), scoreMethod: `${matched.length}/${keywords.length} keywords matched${designBonus ? " + 0.15 design-source bonus" : ""}` };
+      const thumb = r.thumbnail?.src && /^https:\/\//.test(r.thumbnail.src) ? r.thumbnail.src : undefined;
+      return { thumb, title: r.title, url: r.url, description: r.description ?? "", host: r.meta_url?.hostname ?? new URL(r.url).hostname, age: r.page_age ?? null, matched, score: Math.min(1, +(keywordShare + designBonus).toFixed(2)), scoreMethod: `${matched.length}/${keywords.length} keywords matched${designBonus ? " + 0.15 design-source bonus" : ""}` };
     }).sort((a, b) => b.score - a.score);
     const data = { configured: true, results };
     cache.set(ck, { at: Date.now(), data });

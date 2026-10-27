@@ -62,7 +62,9 @@ export interface ProjectProfile {
 
 export type Source = "ai" | "local";
 
-export interface Bookmark { id: string; kind: "reference" | "font" | "palette" | "icon" | "asset"; title: string; url?: string; note?: string; source?: string; at: number }
+export interface Bookmark { id: string; kind: "reference" | "font" | "palette" | "icon" | "asset"; title: string; url?: string; note?: string; source?: string; at: number;
+  /** Optional extras for references saved from Similar References. */
+  thumb?: string; category?: string; refLabel?: "live" | "shortcut" | "curated"; group?: string }
 
 export type MoodItem =
   | { id: string; type: "swatch"; hex: string; label: string }
