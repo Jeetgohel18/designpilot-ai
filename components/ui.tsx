@@ -59,7 +59,7 @@ export function Button({ variant = "secondary", size = "md", className = "", ...
     ghost: "text-muted hover:text-fg hover:bg-hover",
     danger: "border border-red-400/30 bg-red-500/10 text-red-300 hover:bg-red-500/20",
   }[variant];
-  const s = { sm: "h-7 px-2.5 text-xs gap-1.5", md: "h-9 px-3.5 text-sm gap-2", lg: "h-11 px-5 text-sm gap-2" }[size];
+  const s = { sm: "h-9 px-3 text-xs gap-1.5 sm:h-7 sm:px-2.5", md: "h-11 px-4 text-sm gap-2 sm:h-9 sm:px-3.5", lg: "h-12 px-5 text-sm gap-2 sm:h-11" }[size];
   return <button type="button" {...p} className={`inline-flex shrink-0 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${v} ${s} ${className}`} />;
 }
 
@@ -94,19 +94,19 @@ export function SourceBadge({ kind }: { kind: "ai" | "local" | "curated" | "live
 
 export function Chip({ active, onClick, children }: { active?: boolean; onClick?: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={active} className={`rounded-full border px-3 py-1 text-xs transition-colors ${active ? "border-accent/50 bg-accent-soft text-[#cfc9ff]" : "border-line text-muted hover:border-line-strong hover:text-fg"}`}>{children}</button>
+    <button type="button" onClick={onClick} aria-pressed={active} className={`inline-flex min-h-10 items-center rounded-full border px-3 py-1 text-xs transition-colors sm:min-h-8 ${active ? "border-accent/50 bg-accent-soft text-[#cfc9ff]" : "border-line text-muted hover:border-line-strong hover:text-fg"}`}>{children}</button>
   );
 }
 
 export function Card({ className = "", children }: { className?: string; children: React.ReactNode }) {
-  return <div className={`rounded-xl border border-line bg-surface ${className}`}>{children}</div>;
+  return <div className={`min-w-0 rounded-xl border border-line bg-surface ${className}`}>{children}</div>;
 }
 
 export function SectionHead({ title, desc, right }: { title: string; desc?: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="max-w-2xl">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
         {desc && <p className="mt-1 text-sm leading-relaxed text-muted">{desc}</p>}
       </div>
       {right && <div className="flex flex-wrap items-center gap-2">{right}</div>}
@@ -115,7 +115,7 @@ export function SectionHead({ title, desc, right }: { title: string; desc?: Reac
 }
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <label className="block"><span className="mb-1 block text-xs font-medium text-muted">{label}</span>{children}</label>;
+  return <label className="block min-w-0"><span className="mb-1 block text-xs font-medium text-muted">{label}</span>{children}</label>;
 }
 export const inputCls = "w-full rounded-lg border border-line-strong bg-elevated px-3 py-2 text-sm text-fg placeholder:text-faint focus:border-accent/60 focus:outline-none";
 
@@ -132,8 +132,8 @@ export function Dialog({ open, onClose, title, children, wide }: { open: boolean
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4 pt-[10vh] backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={id} className={`rise w-full ${wide ? "max-w-2xl" : "max-w-md"} rounded-2xl border border-line-strong bg-surface p-5 shadow-2xl shadow-black/50 outline-none`}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-3 pt-[6vh] backdrop-blur-sm sm:p-4 sm:pt-[10vh]" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={id} className={`rise w-full ${wide ? "max-w-2xl" : "max-w-md"} max-h-[88dvh] overflow-y-auto rounded-2xl border border-line-strong bg-surface p-4 shadow-2xl shadow-black/50 outline-none sm:p-5`}>
         <div className="mb-3 flex items-center justify-between">
           <h3 id={id} className="text-base font-semibold">{title}</h3>
           <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-muted hover:bg-hover hover:text-fg">✕</button>
@@ -158,4 +158,25 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCl
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "warn"; children: React.ReactNode }) {
   return <div className={`rounded-lg border px-3.5 py-2.5 text-[13px] leading-relaxed ${tone === "warn" ? "border-amber-400/25 bg-amber-400/5 text-amber-100/90" : "border-line bg-elevated text-muted"}`}>{children}</div>;
+}
+
+/** Small help hint: native tooltip + screen-reader text. Use for unfamiliar terms. */
+export function Hint({ term, children }: { term: string; children: React.ReactNode }) {
+  return <abbr title={typeof children === "string" ? children : term} className="cursor-help underline decoration-dotted decoration-faint underline-offset-4">{term}</abbr>;
+}
+
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <div aria-hidden className={`skeleton rounded-lg ${className}`} />;
+}
+
+/** Consistent empty state with a next action. */
+export function EmptyState({ icon, title, children, action }: { icon?: React.ReactNode; title: string; children?: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-dashed border-line-strong px-6 py-10 text-center">
+      {icon && <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-elevated text-muted">{icon}</div>}
+      <h3 className="text-sm font-medium">{title}</h3>
+      {children && <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-muted">{children}</p>}
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
+    </div>
+  );
 }

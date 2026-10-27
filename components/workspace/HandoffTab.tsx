@@ -7,7 +7,7 @@ import { darkTheme } from "@/lib/engine/palette";
 import { ROLES } from "@/lib/types";
 import type { TabProps } from "./shared";
 
-export function HandoffTab({ project: p, direction: d }: TabProps) {
+export function HandoffTab({ project: p, direction: d, goto }: TabProps) {
   const [tab, setTab] = useState<"brief" | "css" | "tokens" | "tailwind" | "fonts">("brief");
   if (!d) return <Notice>Select a direction first — the handoff is built from it.</Notice>;
   const b = handoffBundle(d);
@@ -25,7 +25,7 @@ export function HandoffTab({ project: p, direction: d }: TabProps) {
 
   return (
     <div className="rise">
-      <SectionHead title="Developer handoff" desc={`Built from the “${d.name}” direction. Every block is copyable or downloadable.`} right={<Button size="sm" onClick={() => Object.values(items).forEach((i) => download(i.file, i.text))}>Download all files</Button>} />
+      <SectionHead title="Developer handoff" desc={`Built from the “${d.name}” direction. Every block is copyable or downloadable.`} right={<><Button size="sm" onClick={() => Object.values(items).forEach((i) => download(i.file, i.text))}>Download these files</Button><Button size="sm" variant="primary" onClick={() => goto("export")}>Open Export center</Button></>} />
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line p-3">
           <div className="flex flex-wrap gap-1.5">{(Object.keys(items) as (keyof typeof items)[]).map((k) => <Chip key={k} active={tab === k} onClick={() => setTab(k)}>{items[k].label}</Chip>)}</div>

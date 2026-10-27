@@ -32,11 +32,11 @@ export default function Home() {
     <Shell>
       <FontLoader names={[d.fonts.heading, d.fonts.body]} />
       <section className="ambient border-b border-line">
-        <div className="mx-auto max-w-4xl px-4 pt-16 pb-14 text-center sm:px-6 sm:pt-24">
+        <div className="mx-auto max-w-4xl px-4 pt-12 pb-12 text-center sm:px-6 sm:pt-20">
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-line px-3 py-1 text-xs text-muted"><span className="h-1.5 w-1.5 rounded-full bg-accent" />Design research in minutes, not days</p>
-          <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">Start every project with <span className="font-serif font-normal italic text-[#cfc9ff]">the right direction</span></h1>
-          <p className="mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-muted sm:text-lg">Describe what you&rsquo;re building. Get a personalised workspace of creative directions, typography, color systems, reference sources, brand and asset leads, plus developer-ready tokens.</p>
-          <div className="mt-10 text-left"><BriefInput /></div>
+          <h1 className="text-balance text-[2rem] font-semibold leading-[1.08] tracking-tight sm:text-6xl">Turn your idea into <span className="font-serif font-normal italic text-[#cfc9ff]">a design direction.</span></h1>
+          <p className="mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-muted sm:text-lg">Describe what you&rsquo;re building. DesignPilot AI returns three creative directions, type and color systems, UI components, research sources and developer-ready tokens, all in one workspace you can brainstorm in and export from.</p>
+          <div className="mt-8 sm:mt-10"><BriefInput /></div>
         </div>
       </section>
 

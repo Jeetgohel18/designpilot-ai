@@ -10,6 +10,7 @@ export async function GET(req: Request) {
   const key = process.env.BRAVE_SEARCH_API_KEY;
   if (!key) return Response.json({ configured: false, reason: "BRAVE_SEARCH_API_KEY is not set." });
   const sp = new URL(req.url).searchParams;
+  if (sp.get("status") === "1") return Response.json({ configured: true });
   const q = (sp.get("q") ?? "").trim().slice(0, 150);
   const keywords = (sp.get("kw") ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean).slice(0, 12);
   if (!q) return Response.json({ error: "Missing q" }, { status: 400 });

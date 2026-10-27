@@ -6,7 +6,7 @@ import { rateLimit, tooMany } from "@/lib/server/ratelimit";
 
 const body = z.object({
   brief: z.string().trim().min(15, "Describe your project in at least a sentence.").max(2500),
-  settings: z.object({ industry: z.string().max(80).optional(), audience: z.string().max(200).optional(), platform: z.string().max(80).optional(), style: z.string().max(120).optional(), budget: z.string().max(80).optional() }).default({}),
+  settings: z.object({ industry: z.string().max(80).optional(), audience: z.string().max(200).optional(), platform: z.string().max(80).optional(), style: z.string().max(120).optional(), budget: z.string().max(80).optional(), constraints: z.string().max(400).optional() }).default({}),
 });
 
 export const maxDuration = 60;

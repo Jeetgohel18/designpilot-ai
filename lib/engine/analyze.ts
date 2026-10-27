@@ -90,7 +90,7 @@ export function analyzeLocal(brief: string, settings: ProjectSettings = {}): { p
     colorDirection: colorWord ? `Built around the ${colorWord[0].source.match(/\w+/)?.[0]} direction mentioned in your brief, balanced with neutrals` : `Palettes derived from the leading direction (${top[0].a.name}): ${top[0].a.scheme} harmony`,
     imageDirection: top[0].a.imageStyle,
     keywords,
-    challenges: [...industry.challenges, ...budgetNote],
+    challenges: [...(settings.constraints ? [`Stated constraint: ${settings.constraints}`] : []), ...industry.challenges, ...budgetNote],
     summary: `${detectProjectType(t)} in ${industry.label.toLowerCase()} for ${audience}. Strongest style signals: ${top[0].hits.length ? top[0].hits.join(", ") : "none stated — using industry defaults"}.`,
   };
 

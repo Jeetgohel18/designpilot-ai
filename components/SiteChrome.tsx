@@ -37,7 +37,7 @@ export function SiteNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" aria-label={`${BRAND.name} home`}><Logo /></Link>
+        <Link href="/" aria-label={`${BRAND.name} home`} className="inline-flex min-h-11 items-center"><Logo /></Link>
         <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} aria-current={path === l.href ? "page" : undefined} className={`rounded-md px-3 py-1.5 text-sm transition-colors ${path === l.href ? "bg-hover text-fg" : "text-muted hover:text-fg"}`}>{l.label}</Link>
@@ -46,7 +46,7 @@ export function SiteNav() {
         <div className="flex items-center gap-2">
           <ShareSiteButton />
           <Link href="/#start" className="hidden sm:block"><Button size="sm" variant="primary">New project</Button></Link>
-          <button className="rounded-md p-2 text-muted hover:bg-hover md:hidden" aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+          <button className="flex h-11 w-11 items-center justify-center rounded-md text-muted hover:bg-hover md:hidden" aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
         </div>

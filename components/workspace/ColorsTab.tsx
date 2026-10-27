@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Badge, Button, Card, Chip, CopyButton, Notice, SectionHead, download, useToast } from "../ui";
 import { hexToHsl, hslString, normalizeHex, readableOn, rgbString, contrast, wcagRating, hslToHex } from "@/lib/color";
-import { contrastChecks, darkTheme, exportCss, exportDtcg, exportJson, exportTailwind, gradientsFor, regeneratePalette, setColor } from "@/lib/engine/palette";
+import { contrastChecks, darkTheme, exportCss, exportDtcg, exportJson, exportTailwind, gradientsFor, regeneratePalette, semanticColors, setColor } from "@/lib/engine/palette";
 import { newId } from "@/lib/engine/palette";
 import { fontFamilyCss } from "@/lib/fonts";
 import { useGoogleFonts } from "../FontLoader";
@@ -63,7 +63,7 @@ export function ColorsTab({ project: p, direction: d }: TabProps) {
 
   return (
     <div className="rise">
-      <SectionHead title="Color studio" desc={`Palette for “${d.name}”. Every change updates the preview instantly and is saved to this project.`} right={<><Button size="sm" onClick={() => patch((pl) => regeneratePalette(pl), "Regenerated palette")}>↻ Regenerate (keeps locked)</Button><Button size="sm" onClick={() => { updateProject(p.id, (proj) => { proj.savedPalettes = [{ ...pal, id: newId("pal") }, ...proj.savedPalettes]; }, `Saved palette ${pal.name}`); toast("Palette saved to project"); }}>Save palette</Button></>} />
+      <SectionHead title="Color studio" desc={`Palette for “${d.name}”. Every change updates the preview instantly and is saved to this project.`} right={<><Button size="sm" onClick={() => patch((pl) => regeneratePalette(pl), "Regenerated palette")}>↻ Regenerate (keeps locked)</Button><CopyButton text={ROLES.map((r) => `${r}: ${pal.colors[r]}`).join("\n")} label="Copy all HEX" what="Palette" /><Button size="sm" onClick={() => { updateProject(p.id, (proj) => { proj.savedPalettes = [{ ...pal, id: newId("pal") }, ...proj.savedPalettes]; }, `Saved palette ${pal.name}`); toast("Palette saved to project"); }}>Save palette</Button></>} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,430px)_1fr]">
         <Card className="divide-y divide-line">
@@ -71,7 +71,7 @@ export function ColorsTab({ project: p, direction: d }: TabProps) {
             const hex = pal.colors[role];
             const locked = pal.locked.includes(role);
             return (
-              <div key={role} className="flex items-center gap-3 p-3">
+              <div key={role} className="flex flex-wrap items-center gap-3 p-3">
                 <label className="relative h-11 w-11 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-line-strong" style={{ background: hex }} title="Click to pick a color">
                   <input type="color" value={hex.toLowerCase()} onChange={(e) => edit(role, e.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label={`Pick ${role} color`} />
                 </label>
@@ -104,6 +104,23 @@ export function ColorsTab({ project: p, direction: d }: TabProps) {
             <p className="mt-2 text-[11px] text-faint">Dark theme text contrast: {contrast(darkTheme(pal.colors).text, darkTheme(pal.colors).background).toFixed(1)}:1 · computed with the WCAG relative-luminance formula.</p>
           </Card>
         </div>
+      </div>
+
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        <Card className="p-4">
+          <h3 className="mb-1 text-sm font-medium">Semantic colors</h3>
+          <p className="mb-3 text-xs text-muted">Status colors tuned to pass 4.5:1 on this palette&rsquo;s background. Hues follow convention (green, amber, red, blue), not your brand.</p>
+          <ul className="grid gap-2 sm:grid-cols-2">{(Object.entries(semanticColors(pal.colors.background)) as [string, string][]).map(([k, v]) => <li key={k} className="flex items-center gap-2.5 rounded-lg border border-line p-2"><span className="h-8 w-8 shrink-0 rounded-md border border-line-strong" style={{ background: v }} /><span className="min-w-0 flex-1"><span className="block text-[13px] font-medium capitalize">{k}</span><span className="block font-mono text-[11px] text-faint">{v} · {contrast(v, pal.colors.background).toFixed(1)}:1</span></span><CopyButton text={v} label="HEX" what={v} /></li>)}</ul>
+        </Card>
+        <Card className="p-4">
+          <h3 className="mb-1 text-sm font-medium">Palette on real components</h3>
+          <p className="mb-3 text-xs text-muted">Buttons, input, badge and alert using these exact colors.</p>
+          <div className="space-y-3 rounded-lg p-4" style={{ background: pal.colors.background, color: pal.colors.text, border: `1px solid ${pal.colors.border}` }}>
+            <div className="flex flex-wrap gap-2"><span className="rounded-md px-3 py-1.5 text-sm font-medium" style={{ background: pal.colors.primary, color: readableOn(pal.colors.primary) }}>Primary</span><span className="rounded-md px-3 py-1.5 text-sm" style={{ background: pal.colors.surface, border: `1px solid ${pal.colors.border}` }}>Secondary</span><span className="rounded-md px-3 py-1.5 text-sm font-medium" style={{ background: pal.colors.accent, color: readableOn(pal.colors.accent) }}>Accent</span></div>
+            <div className="rounded-md px-3 py-2 text-sm" style={{ background: pal.colors.surface, border: `1px solid ${pal.colors.border}` }}>Input placeholder…</div>
+            <div className="flex flex-wrap items-center gap-2 text-xs"><span className="rounded-full px-2.5 py-1 font-semibold" style={{ background: pal.colors.secondary + "55" }}>Badge</span><span style={{ color: semanticColors(pal.colors.background).success }}>✓ Saved</span><span style={{ color: semanticColors(pal.colors.background).danger }}>✕ Error</span></div>
+          </div>
+        </Card>
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-2">

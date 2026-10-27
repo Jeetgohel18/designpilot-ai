@@ -8,12 +8,7 @@ export interface TabProps { project: Project; direction: Direction | undefined; 
 
 export const dirOf = directionOf;
 
-/** Keywords used to build searches: project keywords + selected-direction mood (this is how a chosen direction refines results). */
-export function searchKeywords(p: Project, d?: Direction): string[] {
-  const base = p.profile.keywords.slice(0, 5);
-  const mood = d ? [d.name.toLowerCase(), ...p.profile.visualMood.slice(0, 2)] : p.profile.visualMood.slice(0, 2);
-  return [...new Set([...base, ...mood])];
-}
+export { searchKeywords } from "@/lib/searchKeywords";
 
 export function toggleBookmark(p: Project, b: { kind: "reference" | "font" | "palette" | "icon" | "asset"; title: string; url?: string; source?: string; note?: string }) {
   const key = b.url ?? b.title;

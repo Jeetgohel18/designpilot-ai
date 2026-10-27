@@ -109,3 +109,18 @@ Each Gemini call has one shared time budget (analysis 50s, assistant 24s, diagno
 - `?test=analyze` — runs the **real project-analysis pipeline** end to end (developer token required; uses more free quota).
 
 Both report `modelUsed` and `elapsedMs` on success, and `model` + `elapsedMs` (developer view) on failure. Note: Vercel Hobby functions can run up to 60s with `maxDuration`; if your plan allows less, lower the budgets in `lib/server/analysis.ts`.
+
+## Workspace guide (redesign)
+
+The workspace is grouped as **Understand** (Overview, Creative directions) → **Explore** (Moodboard, Typography, Colors, UI components) → **Build** (Start designing, Brainstorming) → **Resources** (Inspiration & research, Logo & brand, Images & assets) → **Deliver** (Developer handoff, Export & download). Tabs are deep-linkable: `/workspace?p=<id>&tab=components`.
+
+- **UI components** — 14 categories of live components styled with the selected direction. The preview and the copyable HTML + CSS come from one source (`lib/engine/componentCss.ts`). Plain HTML + CSS only; no framework code is generated.
+- **Start designing** — screens, journeys, grid, type scale and checklist. Screens/journeys are *curated recommendations by project type*, labelled as such; type, spacing and color are computed from your direction. Progress is saved in this browser.
+- **Brainstorming** — notes in six groups, status marking, tasks and requirements. "Generate more ideas" / "Refine" use Gemini via `/api/brainstorm`; if AI is unavailable, generation falls back to clearly labelled local suggestions and refine reports the failure without changing your notes.
+- **Export & download** — 12 real files plus moodboard HTML/JSON and a single `.zip`. "PDF" = your browser's Print → Save as PDF on a print-ready page. Not provided: Figma/Canva files, moodboard images.
+- **Research / Assets** — eight research categories and seven asset categories. Live results (Brave, Unsplash, Iconify) appear only when configured; everything else is curated or a source's own search page. SVG download is offered only for icon sets with a permissive SPDX licence.
+
+Everything is stored in your browser (localStorage). Sharing creates a server-side *snapshot* link; it does not sync your project.
+
+### Tests
+`npm test` (109 tests, incl. the real Google SDK against a local fake Gemini server) and a Playwright browser run used during development (80 checks, 8 viewport widths). The browser script is not part of the repo.

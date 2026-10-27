@@ -155,3 +155,10 @@ export function exportDtcg(c: PaletteColors): string {
 export function exportTailwind(c: PaletteColors): string {
   return `// tailwind.config.js (v3) — or map to @theme in Tailwind v4\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n${ROLES.map((r) => `        ${r}: "${c[r]}",`).join("\n")}\n      },\n    },\n  },\n};`;
 }
+
+export interface Semantic { success: string; warning: string; danger: string; info: string }
+/** Status colors tuned to pass 4.5:1 on the given background. Hues are fixed conventions (green/amber/red/blue), not brand hues. */
+export function semanticColors(background: string): Semantic {
+  const make = (h: number, sat: number) => ensureContrast(hslToHex(h, sat, 40), background, 4.5);
+  return { success: make(142, 60), warning: make(38, 85), danger: make(4, 70), info: make(212, 70) };
+}

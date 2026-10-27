@@ -58,7 +58,7 @@ export default function ProjectsPage() {
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted">{p.profile.summary}</p>
                   <div className="mt-3 flex flex-wrap gap-1.5"><Badge tone="accent">{p.status}</Badge><Badge>{p.profile.industry}</Badge>{p.share?.enabled && <Badge tone="ok">shared</Badge>}{p.share && !p.share.enabled && <Badge tone="warn">link off</Badge>}</div>
                   <p className="mt-3 text-[11px] text-faint">Updated {ago(p.updatedAt)} · {p.moodboards.length} boards · {p.bookmarks.length} saved</p>
-                  <div className="mt-auto flex gap-1.5 pt-4">
+                  <div className="mt-auto flex flex-wrap gap-1.5 pt-4">
                     <Button size="sm" variant="primary" onClick={() => router.push(`/workspace?p=${p.id}`)}>Open</Button>
                     <Button size="sm" onClick={() => { setRename(p); setName(p.name); }}>Rename</Button>
                     <Button size="sm" onClick={() => { const c = duplicateProject(p.id); if (c) toast("Project duplicated"); }}>Duplicate</Button>
@@ -73,14 +73,14 @@ export default function ProjectsPage() {
 
         {projects.length > 0 && (
           <div className="mt-14 grid gap-8 lg:grid-cols-2">
-            <section><h2 className="mb-3 text-base font-semibold">Favorite references <span className="text-faint">({refs.length})</span></h2>
-              {refs.length === 0 ? <p className="text-sm text-faint">Bookmark references inside a project and they appear here.</p> : <ul className="space-y-1.5">{refs.slice(0, 8).map((r) => <li key={r.id} className="flex justify-between gap-3 rounded-lg border border-line px-3 py-2 text-sm"><a href={r.url} target="_blank" rel="noopener noreferrer" className="truncate hover:text-accent">{r.title} ↗</a><span className="shrink-0 text-xs text-faint">{r.project}</span></li>)}</ul>}</section>
-            <section><h2 className="mb-3 text-base font-semibold">Recent activity</h2><ul className="space-y-1.5">{activity.map((a, i) => <li key={i} className="flex justify-between gap-3 text-sm"><span className="truncate text-muted">{a.text} <span className="text-faint">· {a.project}</span></span><span className="shrink-0 text-xs text-faint">{ago(a.at)}</span></li>)}</ul></section>
-            <section><h2 className="mb-3 text-base font-semibold">Saved palettes <span className="text-faint">({palettes.length})</span></h2>
+            <section className="min-w-0"><h2 className="mb-3 text-base font-semibold">Favorite references <span className="text-faint">({refs.length})</span></h2>
+              {refs.length === 0 ? <p className="text-sm text-faint">Bookmark references inside a project and they appear here.</p> : <ul className="space-y-1.5">{refs.slice(0, 8).map((r) => <li key={r.id} className="flex min-w-0 justify-between gap-3 rounded-lg border border-line px-3 py-2 text-sm"><a href={r.url} target="_blank" rel="noopener noreferrer" className="min-w-0 truncate hover:text-accent">{r.title} ↗</a><span className="max-w-[40%] shrink-0 truncate text-xs text-faint">{r.project}</span></li>)}</ul>}</section>
+            <section className="min-w-0"><h2 className="mb-3 text-base font-semibold">Recent activity</h2><ul className="space-y-1.5">{activity.map((a, i) => <li key={i} className="flex min-w-0 justify-between gap-3 text-sm"><span className="min-w-0 truncate text-muted">{a.text} <span className="text-faint">· {a.project}</span></span><span className="shrink-0 text-xs text-faint">{ago(a.at)}</span></li>)}</ul></section>
+            <section className="min-w-0"><h2 className="mb-3 text-base font-semibold">Saved palettes <span className="text-faint">({palettes.length})</span></h2>
               {palettes.length === 0 ? <p className="text-sm text-faint">Use “Save palette” in the Color studio.</p> : <div className="flex flex-wrap gap-2">{palettes.slice(0, 12).map((s) => <div key={s.id} title={`${s.harmony} · ${s.project}`} className="flex h-9 w-36 overflow-hidden rounded-lg border border-line">{ROLES.slice(0, 5).map((r) => <div key={r} className="flex-1" style={{ background: s.colors[r] }} />)}</div>)}</div>}</section>
-            <section><h2 className="mb-3 text-base font-semibold">Saved font pairings <span className="text-faint">({pairs.length})</span></h2>
+            <section className="min-w-0"><h2 className="mb-3 text-base font-semibold">Saved font pairings <span className="text-faint">({pairs.length})</span></h2>
               {pairs.length === 0 ? <p className="text-sm text-faint">Use “Save pairing” in Typography.</p> : <ul className="space-y-1 text-sm">{pairs.slice(0, 8).map((s) => <li key={s.id} className="text-muted">{s.heading} + {s.body} <span className="text-faint">· {s.project}</span></li>)}</ul>}</section>
-            <section className="lg:col-span-2"><h2 className="mb-3 text-base font-semibold">Saved moodboards <span className="text-faint">({boards.length})</span></h2>
+            <section className="min-w-0 lg:col-span-2"><h2 className="mb-3 text-base font-semibold">Saved moodboards <span className="text-faint">({boards.length})</span></h2>
               {boards.length === 0 ? <p className="text-sm text-faint">Create one in the Moodboard tab.</p> : <div className="flex flex-wrap gap-2">{boards.map((b) => <Link key={b.id} href={`/workspace?p=${b.pid}`} className="rounded-lg border border-line px-3 py-2 text-sm hover:border-line-strong"><span className="block">{b.name}</span><span className="text-xs text-faint">{b.items.length} cards · {b.project}</span></Link>)}</div>}</section>
           </div>
         )}

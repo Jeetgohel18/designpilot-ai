@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Chip, CopyButton, inputCls, Notice, SectionHead, useToast } from "../ui";
-import { FONTS, cssSnippet, explainPairing, fontByName, fontFamilyCss, googleFontsUrl, linkTag, type FontCategory } from "@/lib/fonts";
+import { FONTS, cssSnippet, explainPairing, fallbackStack, fontByName, fontFamilyCss, googleFontsUrl, linkTag, type FontCategory } from "@/lib/fonts";
 import { useGoogleFonts } from "../FontLoader";
 import { updateProject } from "@/lib/store";
 import { newId } from "@/lib/engine/palette";
@@ -60,6 +60,23 @@ export function TypographyTab({ project: p, direction: d }: TabProps) {
             <Button size="sm" onClick={savePair}>Save pairing</Button>
           </div>
         </div>
+      </Card>
+
+      <Card className="mt-6 p-4">
+        <h3 className="mb-1 text-sm font-medium">Type roles in this direction</h3>
+        <p className="mb-4 text-[13px] text-muted">How each typeface is used. These samples update when you change direction or swap a font.</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {([["Heading", d.fonts.heading, "Page and section titles. It gives the brand its voice.", { fontSize: 30, lineHeight: 1.1, fontWeight: 600 }], ["Body", d.fonts.body, "Paragraphs and interface text. Chosen for comfortable reading.", { fontSize: 16, lineHeight: 1.6 }], ["Label", d.fonts.body, "Form labels, metadata and captions, set small and spaced.", { fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }], ["Button", d.fonts.body, "Calls to action. Short, bold and easy to scan.", { fontSize: 14, fontWeight: 600 }]] as const).map(([role, font, why, st]) => (
+            <div key={role} className="rounded-lg border border-line p-3">
+              <div className="flex items-baseline justify-between gap-2"><span className="text-xs font-medium text-muted">{role}</span><span className="truncate text-[11px] text-faint">{font}</span></div>
+              <div className="my-3 min-h-10" style={{ fontFamily: fontFamilyCss(font), color: c.text, background: c.background, padding: 10, borderRadius: 8, ...st }}>{role === "Button" ? <span style={{ background: c.primary, color: c.background, padding: "8px 14px", borderRadius: 6, display: "inline-block" }}>Shop the routine</span> : role === "Label" ? "Skin type" : role === "Body" ? "Gentle formulas for everyday use." : "Radiant, honest skin."}</div>
+              <p className="text-xs leading-relaxed text-faint">{why}</p>
+            </div>
+          ))}
+        </div>
+        <h4 className="mb-1.5 mt-5 text-xs font-medium text-muted">Fallback font stacks</h4>
+        <div className="space-y-1.5">{[d.fonts.heading, d.fonts.body].map((f) => <div key={f} className="flex items-center justify-between gap-2 rounded-lg bg-elevated px-3 py-2"><code className="min-w-0 truncate font-mono text-[11.5px] text-muted">{fontFamilyCss(f)}</code><CopyButton text={`font-family: ${fontFamilyCss(f)};`} what="font-family" /></div>)}</div>
+        <p className="mt-2 text-xs text-faint">Fallback: {fallbackStack(d.fonts.heading)}. If Google Fonts is blocked, the page uses this fallback.</p>
       </Card>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">

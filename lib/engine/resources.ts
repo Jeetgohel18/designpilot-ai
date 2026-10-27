@@ -96,3 +96,53 @@ export const LOGO_TYPES = [
   { type: "Symbol", how: "A standalone mark (pictorial or abstract). Needs budget to build recognition." },
   { type: "Combination mark", how: "Symbol + wordmark lockup with separate and stacked versions. Most flexible for web." },
 ];
+
+export interface ResearchLink extends SourceLink { why: string }
+export interface ResearchCategory { id: string; label: string; desc: string; liveQuery: string; links: ResearchLink[] }
+
+const w = (l: SourceLink, why: string): ResearchLink => ({ ...l, why });
+
+/** Research categories built from the project's real context. Every URL is either a source's own search page or a known site. */
+export function researchCategories(i: { industry: string; niche: string; projectType: string; audience: string; keywords: string[]; mood: string[]; direction?: string; fonts?: string[]; brands?: string[]; searchTerms: string[] }): ResearchCategory[] {
+  const core = i.searchTerms[0] ?? i.keywords.slice(0, 3).join(" ");
+  const kw = i.keywords.slice(0, 4).join(" ");
+  const mood = [i.direction?.toLowerCase(), ...i.mood.slice(0, 1)].filter(Boolean).join(" ");
+  const audience = i.audience.split(/[,(]/)[0].trim().toLowerCase();
+  return [
+    { id: "competitors", label: "Direct competitors", desc: "Products that solve the same problem for the same people.", liveQuery: `best ${core} brands competitors`,
+      links: [w({ name: "Web search: best in category", url: `https://www.google.com/search?q=${e(`best ${core}`)}`, note: "Find the live competitive set", kind: "search" }, `Uses your industry term “${core}”.`), w({ name: "Web search: alternatives", url: `https://www.google.com/search?q=${e(`${core} alternatives`)}`, note: "Alternatives lists reveal who people compare", kind: "search" }, "Shows who customers compare you with."), w({ name: "Product Hunt", url: `https://www.producthunt.com/search?q=${e(core)}`, note: "Newer products in the space", kind: "search" }, `Searches “${core}”.`), w({ name: "SimilarWeb", url: "https://www.similarweb.com/", note: "Look up a competitor's domain for traffic estimates and similar sites", kind: "directory" }, "Use once you have a competitor's domain.")] },
+    { id: "adjacent", label: "Adjacent products", desc: "Products serving the same audience with a different job.", liveQuery: `best apps and websites for ${audience}`,
+      links: [w({ name: "Web search: for your audience", url: `https://www.google.com/search?q=${e(`best apps websites for ${audience}`)}`, note: "Products your audience already uses", kind: "search" }, `Audience: ${audience}.`), w({ name: "Product Hunt", url: `https://www.producthunt.com/search?q=${e(audience)}`, note: "Tools built for this audience", kind: "search" }, `Searches “${audience}”.`), w({ name: "Pinterest", url: `https://www.pinterest.com/search/pins/?q=${e(`${audience} ${i.projectType} design`)}`, note: "Broad visual context", kind: "search" }, "Cross-category visual ideas.")] },
+    { id: "ui", label: "UI & UX inspiration", desc: "Layouts, flows and interface patterns.", liveQuery: `${kw} ${i.projectType} UI design inspiration`,
+      links: referenceSearchLinks(`${kw} ${mood}`.trim()).map((l) => w(l, l.kind === "search" ? `Searches “${`${kw} ${mood}`.trim()}”.` : "Browse by category inside the site.")) },
+    { id: "brand", label: "Visual & branding", desc: "Identities and brand systems in your space.", liveQuery: `${core} brand identity design case study`,
+      links: [w({ name: "Behance: brand identity", url: `https://www.behance.net/search/projects?search=${e(`${core} brand identity`)}`, note: "Identity case studies", kind: "search" }, `Searches “${core} brand identity”.`), w({ name: "Dribbble: branding", url: `https://dribbble.com/search/${e(`${core} branding`)}`, note: "Logo and brand shots", kind: "search" }, `Searches “${core} branding”.`), ...(i.brands ?? []).slice(0, 3).map((b) => w({ name: `${b}: brand guidelines`, url: `https://www.google.com/search?q=${e(`${b} brand guidelines`)}`, note: "Find the official guidelines or press kit", kind: "search" }, `“${b}” is suggested for the selected direction — a name to research, not a verified fact.`))] },
+    { id: "type", label: "Typography", desc: "Specimens and type resources for your selected fonts.", liveQuery: `${mood} typography pairing ${core}`,
+      links: [...(i.fonts ?? []).map((f) => w({ name: `${f} on Google Fonts`, url: `https://fonts.google.com/specimen/${f.replace(/ /g, "+")}`, note: "Specimen, styles and licence", kind: "directory" }, "One of your direction's fonts.")), w({ name: "Fonts In Use", url: `https://www.google.com/search?q=${e(`site:fontsinuse.com ${core}`)}`, note: "Real-world typography examples", kind: "search" }, `Searches Fonts In Use for “${core}”.`), w({ name: "Type Scale", url: "https://typescale.com/", note: "Preview modular scales", kind: "directory" }, "Check your type scale."), w({ name: "Fontsource", url: "https://fontsource.org/", note: "Self-host open-source fonts via npm", kind: "directory" }, "For production font loading.")] },
+    { id: "color", label: "Color inspiration", desc: "Palettes and tools to test them.", liveQuery: `${mood} color palette ${core}`,
+      links: [w({ name: "Dribbble: color palettes", url: `https://dribbble.com/search/${e(`${mood} color palette`.trim())}`, note: "Palettes in context", kind: "search" }, `Searches “${mood} color palette”.`), w({ name: "Coolors", url: "https://coolors.co/", note: "Palette explorer", kind: "directory" }, "Explore variations."), w({ name: "Realtime Colors", url: "https://www.realtimecolors.com/", note: "See a palette on a real layout", kind: "directory" }, "Test your palette."), w({ name: "WebAIM Contrast Checker", url: "https://webaim.org/resources/contrastchecker/", note: "Independent WCAG check", kind: "directory" }, "Verify contrast independently.")] },
+    { id: "components", label: "Component libraries", desc: "Open-source building blocks.", liveQuery: `${i.projectType} component library open source`,
+      links: UI_RESOURCES.map((l) => w(l, l.license ? `Licence: ${l.license}.` : "See the source for licence.")) },
+    { id: "tools", label: "Tools & documentation", desc: "References your team will reach for.", liveQuery: `UX best practices ${core}`,
+      links: [w({ name: "WCAG 2.2 Quick Reference", url: "https://www.w3.org/WAI/WCAG22/quickref/", note: "Official accessibility success criteria", kind: "directory" }, "Accessibility baseline."), w({ name: "Laws of UX", url: "https://lawsofux.com/", note: "Principles behind common UX decisions", kind: "directory" }, "Design principles."), w({ name: "Nielsen Norman Group articles", url: "https://www.nngroup.com/articles/", note: "Research-based UX guidance", kind: "directory" }, "Evidence-based UX."), ...TOOLS.filter((t) => ["Realtime Colors", "Google Fonts"].includes(t.name)).map((t) => w(t, "Useful during design."))] },
+  ];
+}
+
+export const TEXTURE_SOURCES: SourceLink[] = [
+  { name: "Hero Patterns", url: "https://heropatterns.com/", note: "Repeatable SVG background patterns you can recolor", license: "CC BY 4.0 (per site) — confirm on site", kind: "directory" },
+  { name: "Haikei", url: "https://haikei.app/", note: "Generate SVG waves, blobs and gradients", license: "Free to use (per site) — confirm on site", kind: "directory" },
+  { name: "Transparent Textures", url: "https://www.transparenttextures.com/", note: "Subtle seamless textures as transparent PNGs", license: "Per site — confirm on site", kind: "directory" },
+];
+export function textureSearchLinks(q: string): SourceLink[] {
+  return [
+    { name: "Unsplash: textures & backgrounds", url: `https://unsplash.com/s/photos/${slug(`${q} texture background`)}`, note: "Photographic textures and backdrops", license: "Unsplash License — confirm on site", kind: "search" },
+    { name: "Pexels: backgrounds", url: `https://www.pexels.com/search/${e(`${q} background`)}/`, note: "Backgrounds and surfaces", license: "Pexels License — confirm on site", kind: "search" },
+  ];
+}
+export const DESIGN_SYSTEMS: SourceLink[] = [
+  { name: "Material Design 3", url: "https://m3.material.io/", note: "Google's design system: guidance, components and tokens", kind: "directory" },
+  { name: "Apple Human Interface Guidelines", url: "https://developer.apple.com/design/human-interface-guidelines/", note: "Platform guidance for iOS, macOS and more", kind: "directory" },
+  { name: "Carbon Design System", url: "https://carbondesignsystem.com/", note: "IBM's open-source design system", license: "Apache-2.0 (code) — confirm on site", kind: "directory" },
+  { name: "Shopify Polaris", url: "https://polaris.shopify.com/", note: "Commerce-focused design system and patterns", kind: "directory" },
+  { name: "Atlassian Design System", url: "https://atlassian.design/", note: "Foundations and components for productivity products", kind: "directory" },
+];

@@ -38,6 +38,7 @@ export interface ProjectSettings {
   platform?: string;
   style?: string;
   budget?: string;
+  constraints?: string;
 }
 
 export interface ProjectProfile {
@@ -74,6 +75,13 @@ export interface Moodboard { id: string; name: string; directionId: string; item
 
 export interface Share { token: string; ownerKey: string; enabled: boolean; kind: "project" | "moodboard"; createdAt: number }
 
+export type IdeaGroup = "Problems" | "Opportunities" | "Features" | "User needs" | "Visual ideas" | "Open questions";
+export const IDEA_GROUPS: IdeaGroup[] = ["Problems", "Opportunities", "Features", "User needs", "Visual ideas", "Open questions"];
+export interface Idea { id: string; group: IdeaGroup; text: string; status: "open" | "selected" | "rejected" | "research"; origin: "you" | "analysis" | "ai" | "local"; createdAt: number }
+export interface DesignTask { id: string; text: string; done: boolean; fromIdea?: string }
+export interface Requirement { id: string; text: string; fromIdea?: string }
+export interface Brainstorm { ideas: Idea[]; tasks: DesignTask[]; requirements: Requirement[] }
+
 export interface Project {
   id: string;
   name: string;
@@ -91,6 +99,8 @@ export interface Project {
   moodboards: Moodboard[];
   share?: Share;
   altPalettes?: Palette[];
+  brainstorm?: Brainstorm;
+  starter?: { done: string[]; extraScreens: string[] };
   activity: { at: number; text: string }[];
   createdAt: number;
   updatedAt: number;
