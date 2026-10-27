@@ -27,7 +27,7 @@ export function buildMoodItems(p: Project, d: Direction): MoodItem[] {
 }
 
 function toMarkdown(b: Moodboard) {
-  return `# ${b.name}\n\n` + b.items.map((i) => i.type === "swatch" ? `- **${i.label}** ${i.hex}` : i.type === "type" ? `- **Type** ${i.heading} + ${i.body}` : i.type === "note" ? `- **Note** ${i.text.replace(/\n+/g, " ")}` : i.type === "tag" ? `- **${i.group}** ${i.text}` : `- **Reference** [${i.title}](${i.url})`).join("\n");
+  return `# ${b.name}\n\n` + b.items.map((i) => i.type === "swatch" ? `- **${i.label}** ${i.hex}` : i.type === "type" ? `- **Type** ${i.heading} + ${i.body}` : i.type === "note" ? `- **Note** ${i.text.replace(/\n+/g, " ")}` : i.type === "tag" ? `- **${i.group}** ${i.text}` : i.type === "logo" ? `- **Logo concept** ${i.title}` : `- **Reference** [${i.title}](${i.url})`).join("\n");
 }
 
 export function MoodboardTab({ project: p, direction: d }: TabProps) {

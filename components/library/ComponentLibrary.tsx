@@ -8,6 +8,7 @@ import { CATEGORIES, COMPONENTS, buildCtx, componentById, defaultCfg, defaultCus
 import { CATEGORY_LABEL, type Component } from "@/lib/library/types";
 import { componentsCssFile } from "@/lib/engine/exports";
 import { updateProject } from "@/lib/store";
+import { useBrandLogoSvg } from "../brand/useBrand";
 import type { Project } from "@/lib/types";
 import type { TabProps } from "../workspace/shared";
 
@@ -54,6 +55,7 @@ export function ComponentLibrary({ project: p, direction: dir0, goto }: TabProps
     return terms.length ? base.filter((c) => terms.every((t) => haystack(c).includes(t))) : base;
   }, [q, cat, fav, recent]);
 
+  const logo = useBrandLogoSvg(p, custom.dark);
   const open = (id: string) => {
     setOpenId(id);
     updateProject(p.id, (x) => { const r = [id, ...(x.library?.recent ?? []).filter((y) => y !== id)].slice(0, 8); x.library = { favorites: x.library?.favorites ?? [], recent: r }; });
@@ -73,7 +75,7 @@ export function ComponentLibrary({ project: p, direction: dir0, goto }: TabProps
     <div>
       <LibraryStyles />
       {current ? (
-        <ComponentDetail key={current.id + d.id} project={p} component={current} direction={d} custom={custom} setCustom={setCustom} favorite={fav.includes(current.id)} onFavorite={() => toggleFav(current.id)} onBack={() => setOpenId(null)} onFind={find} />
+        <ComponentDetail key={current.id + d.id} project={p} component={current} direction={d} custom={custom} setCustom={setCustom} favorite={fav.includes(current.id)} onFavorite={() => toggleFav(current.id)} onBack={() => setOpenId(null)} onFind={find} logo={logo} brandName={p.brand?.profile.name} />
       ) : (<>
         <SectionHead title="UI components" desc={`${COMPONENTS.length} components, drawn live with the colors, fonts, radius and spacing of your selected direction. Open one to customize it, check its states and export it.`}
           right={<Button size="sm" onClick={() => download(`${d.name.toLowerCase().replace(/\W+/g, "-")}-components.css`, componentsCssFile({ ...p, selectedDirection: d.id }), "text/css")}><Download size={14} aria-hidden /> All component CSS</Button>} />

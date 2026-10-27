@@ -9,7 +9,7 @@ import { BEHAVIOR_SOURCE } from "@/lib/library";
 import { CATEGORY_LABEL, type Cfg, type Component } from "@/lib/library/types";
 import type { Direction, Project } from "@/lib/types";
 
-interface Props { project: Project; component: Component; direction: Direction; custom: Custom; setCustom: (c: Custom) => void; favorite: boolean; onFavorite: () => void; onBack: () => void; onFind: (q: string) => void }
+interface Props { project: Project; component: Component; direction: Direction; custom: Custom; setCustom: (c: Custom) => void; favorite: boolean; onFavorite: () => void; onBack: () => void; onFind: (q: string) => void; logo?: string; brandName?: string }
 type CodeTab = "html" | "markup" | "css" | "tsx" | "tokens" | "tokenscss" | "js";
 
 function Seg<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
@@ -21,13 +21,13 @@ function Seg<T extends string>({ label, value, options, onChange }: { label: str
   );
 }
 
-export function ComponentDetail({ project, component: c, direction: d, custom, setCustom, favorite, onFavorite, onBack, onFind }: Props) {
+export function ComponentDetail({ project, component: c, direction: d, custom, setCustom, favorite, onFavorite, onBack, onFind, logo, brandName }: Props) {
   const [cfg, setCfg] = useState<Cfg>(() => defaultCfg(c));
   const [panel, setPanel] = useState(false);
   const [exp, setExp] = useState(false);
   const [code, setCode] = useState<CodeTab>("html");
   const stageRef = useRef<HTMLDivElement>(null);
-  const ctx = useMemo(() => buildCtx(project, d, custom), [project, d, custom]);
+  const ctx = useMemo(() => buildCtx({ name: brandName ?? project.name }, d, custom, logo), [project.name, brandName, d, custom, logo]);
   const vars = useMemo(() => stageVars(ctx, custom), [ctx, custom]);
   const html = useMemo(() => c.html(cfg, ctx), [c, cfg, ctx]);
   const variants = c.controls.find((x) => x.key === "variant");

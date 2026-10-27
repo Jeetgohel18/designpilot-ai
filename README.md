@@ -24,7 +24,9 @@ That's it. No accounts or keys are required — features that need one switch th
 | Typography explorer | Working | ~40 real Google Fonts, curated tags (labelled "curated"), live previews, copyable CSS / `<link>` |
 | Color studio | Working | Edit/lock/replace colors, WCAG contrast (unit-tested), light/dark preview, gradients, CSS / JSON / W3C tokens / Tailwind export |
 | References & competitors | Working with limits | Builds **search links** to Dribbble, Behance, Awwwards, etc. from your keywords. **Real ranked web results need a Brave key.** Nothing is invented. |
-| Brand & logo concepts | Working with limits | Brand names to research + search links; original logo concept *descriptions* and prompts. **No image generation is connected.** |
+| Brand identity studio | Working | Editable brand profile, six generated **vector** logo concepts (wordmark, monogram, symbol, negative-space, emblem, editorial, technical…), variants, clear space / minimum size, mockups, SVG / PNG / JPEG / PDF export and a brand-kit ZIP. Concepts are generated locally from your answers; they are **not** checked for uniqueness or trademarks. (Original research links and image-generator prompts are under “Research & prompts”.) |
+| Similar references | Working with limits | Project-specific searches in six groups. **Live results** from App Store (iTunes Search API) and GitHub need no key; web results need `BRAVE_SEARCH_API_KEY`. Everything else is a labelled search shortcut or curated link. |
+| UI component library | Working | 58 components in six categories, rendered live with your direction's tokens, customizable, with PNG / JPEG / SVG (where genuinely vector) / PDF spec sheet / HTML / CSS / React-TSX / token exports. | **No image generation is connected.** |
 | Icons / illustrations / images | Working with limits | Curated real libraries with licences. Live icon search (Iconify) and Unsplash photos need network/key (see below). |
 | Moodboards | Working | Create from direction, drag to rearrange, add/remove, compare two, export JSON/Markdown |
 | Design assistant | Working | Offline rule-based unless `GEMINI_API_KEY` is set; can take actions (alt palettes, "more premium") |
@@ -124,3 +126,13 @@ Everything is stored in your browser (localStorage). Sharing creates a server-si
 
 ### Tests
 `npm test` (109 tests, incl. the real Google SDK against a local fake Gemini server) and a Playwright browser run used during development (80 checks, 8 viewport widths). The browser script is not part of the repo.
+
+## Component library, Similar references and Brand studio
+
+- **UI components** — open a component to change variant, size, radius, weight, accent, spacing, background, border and shadow (defaults come from your selected direction). **Export** gives PNG/JPEG at 1×/2×/3× (non-blank guard, fonts embedded), SVG only where the component is real vector artwork (otherwise the dialog explains why), a PDF spec sheet with selectable text, standalone HTML (interactive behaviour included), CSS, type-checked React/TSX and W3C/CSS tokens. File names look like `afterhours-primary-button@2x.png`. Favorites and recently viewed are saved in the project.
+- **Similar references** — each card says whether it is a **Live result** (returned by a source API just now), a **Search shortcut** (opens the site's own search) or **Curated**. Nothing is scraped; thumbnails appear only when an API returns one. Behance, Dribbble, Pinterest, Mobbin, Awwwards, Land-book, Godly, SiteInspire, Figma Community and Google Play are shortcuts because they have no open search API. Products are called "related", never "competitors", unless you say so. Save, add to a moodboard, or send to Brainstorming → Visual ideas.
+- **Logo & brand** — pick one concept with "Use as my logo": it then appears in navigation/auth/dashboard component previews, the developer brief, a `brand-tokens.css` export and (if you add it) your moodboards. Logo files contain outlined lettering so they open correctly without the font.
+
+New server routes (no keys): `/api/references/apps` (App Store search) and `/api/references/repos` (GitHub repository search, low unauthenticated rate limit, cached). `/api/font-file` serves Google font files so logos and exports can be drawn as outlines.
+
+**Verification status for these features**: unit tests (vitest) cover the vector/PDF/ZIP writers, the component catalogue, reference planning, route mapping with a stubbed `fetch`, brand generation and the share schema; a Playwright run on the production build checked every export above (PNG/JPEG pixels, SVG with `xmllint`, PDF with `pdftotext`, ZIP integrity) and layouts from 320px to 1440px. **Not verified**: the live App Store, GitHub and Brave responses (my sandbox cannot reach them), so please try "Similar references" once on your deployed site.

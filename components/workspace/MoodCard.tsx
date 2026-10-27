@@ -3,6 +3,8 @@ import type { MoodItem } from "@/lib/types";
 import { fontFamilyCss } from "@/lib/fonts";
 import { readableOn } from "@/lib/color";
 import { safeUrl } from "@/lib/mood";
+import { LogoThumb } from "../brand/LogoView";
+import { ARCH } from "@/lib/brand/render";
 
 export function MoodCard({ item }: { item: MoodItem }) {
   switch (item.type) {
@@ -14,6 +16,8 @@ export function MoodCard({ item }: { item: MoodItem }) {
       return <div className="h-full min-h-28 rounded-xl border border-line bg-elevated p-4 text-[13px] leading-relaxed text-muted whitespace-pre-wrap">{item.text}</div>;
     case "tag":
       return <div className="flex h-full min-h-28 flex-col justify-between rounded-xl border border-dashed border-line-strong p-4"><span className="text-[11px] uppercase tracking-wider text-faint">{item.group}</span><p className="text-sm leading-snug">{item.text}</p></div>;
+    case "logo":
+      return <div className="flex h-full min-h-28 flex-col justify-between gap-2 rounded-xl border border-line p-3" style={{ background: item.concept.palette.bg }}><LogoThumb spec={item.concept} className="mx-auto w-full max-w-[220px]" /><span className="text-[11px]" style={{ color: item.concept.palette.ink }}>Logo concept · {ARCH[item.concept.archetype].label}</span></div>;
     case "link": {
       const href = safeUrl(item.url);
       return <div className="flex h-full min-h-28 flex-col justify-between rounded-xl border border-line bg-surface p-4"><span className="text-[11px] uppercase tracking-wider text-faint">Reference · {item.source}</span>{href ? <a href={href} target="_blank" rel="noopener noreferrer" className="mt-2 text-sm font-medium hover:text-accent">{item.title} ↗</a> : <span className="text-sm">{item.title}</span>}</div>;

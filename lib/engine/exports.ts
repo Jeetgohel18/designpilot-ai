@@ -6,6 +6,7 @@ import { uiStyleOf } from "./uistyle";
 import { referenceSearchLinks, competitorSearchLinks } from "./resources";
 import { INDUSTRIES } from "./taxonomy";
 import { allCss } from "../library";
+import { tokensCss as brandTokensCss } from "../brand/kit";
 import { readableOn } from "../color";
 import { ROLES, type Direction, type Moodboard, type Project } from "../types";
 import { searchKeywords } from "../searchKeywords";
@@ -215,6 +216,7 @@ export function moodboardHtml(p: Project, b: Moodboard): string {
       case "swatch": return `<div class="card" style="background:${escapeHtml(i.hex)}"><b>${escapeHtml(i.label)}</b><br>${escapeHtml(i.hex)}</div>`;
       case "type": return `<div class="card"><div style="font-size:26px;font-family:'${escapeHtml(i.heading)}',serif">${escapeHtml(i.sample)}</div><span class="meta">${escapeHtml(i.heading)} + ${escapeHtml(i.body)}</span></div>`;
       case "note": return `<div class="card">${escapeHtml(i.text).replace(/\n/g, "<br>")}</div>`;
+      case "logo": return `<div class="card" style="background:${escapeHtml(i.concept.palette.bg)};color:${escapeHtml(i.concept.palette.ink)}"><span class="meta">Logo concept</span><br><b>${escapeHtml(i.concept.name)}</b><br>${escapeHtml(i.title)}</div>`;
       case "tag": return `<div class="card"><span class="meta">${escapeHtml(i.group)}</span><br>${escapeHtml(i.text)}</div>`;
       case "link": { let ok = false; try { ok = /^https?:$/.test(new URL(i.url).protocol); } catch { /* invalid */ } return `<div class="card"><span class="meta">Reference · ${escapeHtml(i.source)}</span><br>${ok ? `<a href="${escapeHtml(i.url)}">${escapeHtml(i.title)}</a>` : escapeHtml(i.title)}</div>`; }
     }
@@ -233,6 +235,7 @@ export const EXPORTS: ExportItem[] = [
   { id: "css", group: "Design tokens", title: "CSS custom properties", desc: "Fonts, colors, semantic colors, radius and spacing.", filename: "design-tokens.css", mime: "text/css", build: cssVariables },
   { id: "type", group: "Design tokens", title: "Typography specification", desc: "Families, fallbacks, Google Fonts URL and type scale.", filename: "typography.json", mime: "application/json", build: (p) => JSON.stringify(typographySpec(directionOf(p)!), null, 2) },
   { id: "tokens", group: "Design tokens", title: "Consolidated token file", desc: "Colors, semantic colors, typography, spacing, radius, gradients.", filename: "design-tokens.json", mime: "application/json", build: consolidatedTokens },
+  { id: "brandtokens", group: "Design tokens", title: "Brand tokens (logo colours + fonts)", desc: "CSS variables for the logo concept you chose in Logo & brand.", filename: "brand-tokens.css", mime: "text/css", build: (p) => brandTokensCss(p.brand?.concepts.find((x) => x.id === p.brand?.selected) ?? null, directionOf(p) ?? p.directions[0]) },
   { id: "componentcss", group: "Developer handoff", title: "Component CSS (HTML + CSS)", desc: "Tokens plus the exact CSS used by the live component previews.", filename: "components.css", mime: "text/css", build: componentsCssFile },
   { id: "components", group: "Developer handoff", title: "Component specifications", desc: "Style rules and required states for priority components.", filename: "component-specs.md", mime: "text/markdown", build: componentSpecs },
   { id: "responsive", group: "Developer handoff", title: "Screens & responsive notes", desc: "Suggested screens, journeys, grid and breakpoints.", filename: "screens-and-responsive.md", mime: "text/markdown", build: responsiveNotes },

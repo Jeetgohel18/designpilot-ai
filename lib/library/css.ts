@@ -117,6 +117,7 @@ control: `
 
 nav: `
 .ds-nav{display:flex;align-items:center;justify-content:space-between;gap:${sp(16)};padding:${sp(10)} ${sp(16)};background:var(--color-surface);border:var(--border-w) solid var(--color-border);border-radius:var(--radius-base)}
+.ds-logo{display:inline-flex;align-items:center}.ds-logo svg{height:26px;width:auto;display:block}
 .ds-nav .brand{font-family:var(--font-heading);font-weight:700;font-size:17px;display:flex;align-items:center;gap:8px;color:var(--color-text);text-decoration:none}
 .ds-nav .brand b{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:calc(var(--radius-base) * .6);background:var(--color-primary);color:var(--color-on-primary);font-size:14px}
 .ds-nav ul{list-style:none;margin:0;padding:0;display:flex;gap:4px}

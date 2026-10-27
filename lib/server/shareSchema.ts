@@ -18,6 +18,12 @@ const mood = z.discriminatedUnion("type", [
   z.object({ id: s(80), type: z.literal("type"), heading: s(80), body: s(80), sample: s(200) }),
   z.object({ id: s(80), type: z.literal("note"), text: s(800) }),
   z.object({ id: s(80), type: z.literal("link"), title: s(200), url: s(800), source: s(80) }),
+  z.object({ id: s(80), type: z.literal("logo"), title: s(200), concept: z.object({
+    id: s(80), archetype: z.enum(["wordmark", "monogram", "geometric", "letterform", "negative", "emblem", "combo", "minimal", "editorial", "technical"]),
+    motif: z.enum(["orbit", "petal", "stack", "quarters", "diamond", "wave", "peak", "spark"]), seed: z.number().int().min(0).max(100000),
+    name: s(80), initials: s(4), font: z.object({ family: s(60), weight: z.number().int().min(100).max(900) }), tracking: z.number().min(-0.2).max(1), caps: z.boolean(),
+    palette: z.object({ ink: hex, accent: hex, bg: hex, deep: hex }), pinned: z.boolean().optional(),
+  }) }),
   z.object({ id: s(80), type: z.literal("tag"), text: s(120), group: s(60) }),
 ]);
 export const snapshotSchema = z.object({

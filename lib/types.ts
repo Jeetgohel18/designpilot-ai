@@ -71,6 +71,7 @@ export type MoodItem =
   | { id: string; type: "type"; heading: string; body: string; sample: string }
   | { id: string; type: "note"; text: string }
   | { id: string; type: "link"; title: string; url: string; source: string }
+  | { id: string; type: "logo"; title: string; concept: import("./brand/types").ConceptSpec }
   | { id: string; type: "tag"; text: string; group: string };
 
 export interface Moodboard { id: string; name: string; directionId: string; items: MoodItem[]; updatedAt: number; share?: Share }
@@ -104,6 +105,7 @@ export interface Project {
   brainstorm?: Brainstorm;
   starter?: { done: string[]; extraScreens: string[] };
   library?: { favorites: string[]; recent: string[] };
+  brand?: import("./brand/types").BrandState;
   activity: { at: number; text: string }[];
   createdAt: number;
   updatedAt: number;

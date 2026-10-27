@@ -11,6 +11,8 @@ export const CATEGORY_LABEL: Record<Category, string> = { foundations: "Foundati
 export interface Ctx {
   brand: string; heading: string; body: string; colors: PaletteColors; sem: Semantic; ui: UiStyle;
   scale: TypeStep[]; spacing: number[]; dark: boolean; radius: number;
+  /** Selected brand logo as inline SVG with outlined lettering (trimmed to the artwork), when the project has one. */
+  logo?: string;
 }
 export interface Cfg { variant: string; size: string; iconPos: "none" | "left" | "right" }
 export interface Control { key: "variant" | "size" | "iconPos"; label: string; options: { value: string; label: string }[]; default: string }

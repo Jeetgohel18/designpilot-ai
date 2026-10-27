@@ -2,6 +2,8 @@ import { cssSnippet, fontFamilyCss, linkTag } from "../fonts";
 import { darkTheme, exportCss, exportDtcg } from "./palette";
 import { ROLES, type Direction, type Project } from "../types";
 import { contrast } from "../color";
+import { describe } from "../brand/concepts";
+import { ARCH } from "../brand/render";
 
 export const directionOf = (p: Project): Direction | undefined => p.directions.find((d) => d.id === p.selectedDirection) ?? p.directions[0];
 
@@ -40,6 +42,23 @@ export function accessibilityNotes(d: Direction): string[] {
   ];
 }
 
+/** Brand identity section for the brief. Empty until the user has chosen a logo concept. */
+export function brandSection(p: Project): string {
+  const b = p.brand, c = b?.concepts.find((x) => x.id === b.selected);
+  if (!b || !c) return "";
+  const a = describe(c, b.profile);
+  return `
+## Brand identity (chosen logo concept)
+**Brand:** ${b.profile.name} · **Concept:** ${ARCH[c.archetype].label} (a generated design concept; not checked against existing logos or trademarks)
+**Logo colours:** ink ${c.palette.ink}, accent ${c.palette.accent}, background ${c.palette.bg}, deep ${c.palette.deep}
+**Logo lettering:** ${c.font.family} ${c.font.weight}${c.caps ? ", capitals" : ""}
+**Idea:** ${a.idea}
+**Best use:** ${a.bestUse}
+**Weaknesses to know about:** ${a.weakness}
+${b.profile.tone ? `**Tone of voice:** ${b.profile.tone}\n` : ""}Logo files (SVG, PNG, PDF) and the brand kit come from the Logo & brand tab. Use the exported files; do not redraw the logo.
+`;
+}
+
 export function designBrief(p: Project): string {
   const d = directionOf(p);
   const pr = p.profile;
@@ -66,7 +85,7 @@ ${pr.brandPersonality.join(", ")} — ${pr.visualMood.join(", ")}
 
 ## Known design challenges
 ${L(pr.challenges)}
-${d ? `
+${brandSection(p)}${d ? `
 ## Selected direction: ${d.name}
 ${d.summary}
 

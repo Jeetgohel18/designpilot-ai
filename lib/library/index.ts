@@ -31,14 +31,14 @@ export function defaultCustom(d: Direction): Custom {
   return { radius: ui.radius, weight: 600, accent: null, sp: ui.density === "airy" ? 1.15 : ui.density === "compact" ? 0.85 : 1, bg: "direction", border: parseInt(ui.border) || 1, shadow: shadowLevel(ui.shadow), width: "desktop", dark: false };
 }
 
-export function buildCtx(p: Pick<Project, "name">, d: Direction, custom: Custom): Ctx {
+export function buildCtx(p: Pick<Project, "name">, d: Direction, custom: Custom, logo?: string): Ctx {
   const light = d.palette.colors;
   const base = custom.dark ? darkTheme(light) : { ...light };
   const colors = { ...base };
   if (custom.accent) colors.primary = custom.accent;
   const ui = uiStyleOf(d);
   const grid = gridGuidance(d);
-  return { brand: p.name.split(/[·—-]/)[0].trim() || "Brand", heading: d.fonts.heading, body: d.fonts.body, colors, sem: semanticColors(colors.background), ui, scale: typeScale(d).steps, spacing: grid.spacing, dark: custom.dark, radius: custom.radius };
+  return { brand: p.name.split(/[·—-]/)[0].trim() || "Brand", heading: d.fonts.heading, body: d.fonts.body, colors, sem: semanticColors(colors.background), ui, scale: typeScale(d).steps, spacing: grid.spacing, dark: custom.dark, radius: custom.radius, logo };
 }
 
 /** The CSS custom properties set on the preview stage. */
