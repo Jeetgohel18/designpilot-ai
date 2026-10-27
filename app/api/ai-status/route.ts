@@ -1,25 +1,50 @@
-import { AiError, aiConfigured, classifyError, generate, geminiModel, logAiError, userMessage } from "@/lib/server/gemini";
+import { AiError, aiConfigured, classifyError, generateDetailed, isDeveloper, listUsableModels, logAiError, modelCandidates, userMessage } from "@/lib/server/gemini";
 import { rateLimit, tooMany } from "@/lib/server/ratelimit";
-
-const status = (k: Parameters<typeof userMessage>[0]) => userMessage(k, "analysis").replace(/ This analysis was generated.*$/, "");
 
 export const maxDuration = 30;
 
-// GET /api/ai-status            -> is a key configured? (never reveals the key)
-// GET /api/ai-status?test=1     -> makes ONE tiny live Gemini call to prove the key works (counts toward free quota)
+// Public:
+//   GET /api/ai-status           -> is a key configured, which model(s) would be used (never the key)
+//   GET /api/ai-status?test=1    -> ONE tiny live Gemini call. Returns working true/false + a SAFE category + friendly message.
+// Developer-only (header "Authorization: Bearer <AI_STATUS_TOKEN>", token set in your hosting env vars):
+//   adds httpStatus, providerStatus, providerReason and a redacted/truncated detail to ?test=1,
+//   and GET /api/ai-status?models=1 lists the model IDs your key can use (verifies GEMINI_MODEL against Google's live list).
+const tail = /\s+This (analysis|answer) .*$/;
+const friendly = (k: Parameters<typeof userMessage>[0]) => userMessage(k, "analysis").replace(tail, "");
+
 export async function GET(req: Request) {
+  const sp = new URL(req.url).searchParams;
   const configured = aiConfigured();
-  const base = { provider: "gemini", model: geminiModel(), configured };
-  if (new URL(req.url).searchParams.get("test") !== "1") return Response.json(base);
-  const rl = rateLimit(req, "ai-test", 3);
+  const dev = isDeveloper(req);
+  const base = { provider: "gemini", models: modelCandidates(), configured, developerAccess: dev };
+  const headers = { "Cache-Control": "no-store" };
+
+  if (sp.get("models") === "1") {
+    if (!dev) return Response.json({ error: "Developer access required (Authorization: Bearer <AI_STATUS_TOKEN>)." }, { status: 401, headers });
+    const rl = rateLimit(req, "ai-models", 6);
+    if (!rl.ok) return tooMany(rl.retryAfter);
+    try {
+      const available = await listUsableModels();
+      return Response.json({ ...base, available, configuredModelsAvailable: Object.fromEntries(modelCandidates().map((m) => [m, available.includes(m)])) }, { headers });
+    } catch (err) {
+      const e = classifyError(err); logAiError("ai-status/models", e);
+      return Response.json({ ...base, working: false, reason: e.kind, message: friendly(e.kind), ...e.diagnostics }, { headers });
+    }
+  }
+
+  if (sp.get("test") !== "1") return Response.json(base, { headers });
+
+  const rl = rateLimit(req, "ai-test", dev ? 12 : 3);
   if (!rl.ok) return tooMany(rl.retryAfter);
-  if (!configured) return Response.json({ ...base, working: false, message: status("missing_key") });
+  if (!configured) return Response.json({ ...base, working: false, reason: "missing_key", message: friendly("missing_key") }, { headers });
   try {
-    const t = await generate({ system: "Reply with exactly one word.", prompt: "Say: ready", maxTokens: 20, timeoutMs: 15_000 });
-    return Response.json({ ...base, working: true, message: `Gemini responded (${t.trim().slice(0, 20)}).` });
+    const r = await generateDetailed({ system: "Reply with exactly one word.", prompt: "Say: ready", maxTokens: 20, timeoutMs: 15_000 });
+    return Response.json({ ...base, working: true, modelUsed: r.model, message: "Gemini responded successfully." }, { headers });
   } catch (err) {
     const e = err instanceof AiError ? err : classifyError(err);
     logAiError("ai-status", e);
-    return Response.json({ ...base, working: false, reason: e.kind, message: status(e.kind) });
+    const pub = { ...base, working: false, reason: e.kind, message: friendly(e.kind) };
+    // Raw provider details only for the authorized developer; the public never sees them.
+    return Response.json(dev ? { ...pub, ...e.diagnostics } : pub, { headers });
   }
 }

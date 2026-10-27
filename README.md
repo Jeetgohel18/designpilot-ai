@@ -88,4 +88,15 @@ tests/             npm test
 4. Open `https://YOUR-SITE/api/ai-status?test=1` — makes one tiny real Gemini call. `"working": true` means the key and model work. Otherwise `message` explains why (invalid key, free quota used up, etc.).
 5. Generate a project. In the workspace the badge on **Analysis** says **AI-generated**. If it says **Generated locally**, a yellow notice explains the reason and the built-in engine was used.
 
-Default model: `gemini-2.5-flash` (stable, free-tier). Change with `GEMINI_MODEL`. The app never enables billing; if you hit the free quota it falls back to the built-in engine and says so.
+Default models: `gemini-3.5-flash-lite`, then `gemini-3.1-flash-lite` (tried only if the first answers "model not found"). Google retired/restricted the 2.5 family for new keys, which answers with a 404. Set `GEMINI_MODEL` to force exactly one model (no substitution). The app never enables billing; if you hit the free quota it falls back to the built-in engine and says so.
+
+### Finding out *why* Gemini fails (developer diagnostics)
+
+`/api/ai-status?test=1` shows a safe category to everyone: `invalid_key`, `permission_denied`, `model_not_found`, `quota`, `invalid_request`, `timeout`, `network`, `provider` (temporary Google failure).
+To see the exact HTTP status and Google's error codes, add an `AI_STATUS_TOKEN` environment variable in Vercel (a long random string, 16+ characters), redeploy, then run:
+
+```
+curl -H "Authorization: Bearer YOUR_TOKEN" "https://YOUR-SITE/api/ai-status?test=1"
+curl -H "Authorization: Bearer YOUR_TOKEN" "https://YOUR-SITE/api/ai-status?models=1"
+```
+The second lists the model IDs your key can really use. Vercel → your project → **Logs** also shows redacted lines such as `Gemini call failed: kind=model_not_found http=404 status=NOT_FOUND`. API keys, headers and request bodies are never returned or logged.

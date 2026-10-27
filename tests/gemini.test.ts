@@ -9,14 +9,14 @@ describe("classifyError", async () => {
   it("maps provider failures to safe categories", () => {
     expect(classifyError(new ApiError({ message: "x", status: 429 })).kind).toBe("quota");
     expect(classifyError(new ApiError({ message: "API key not valid. Please pass a valid API key.", status: 400 })).kind).toBe("invalid_key");
-    expect(classifyError(new ApiError({ message: "denied", status: 403 })).kind).toBe("invalid_key");
+    expect(classifyError(new ApiError({ message: "denied", status: 403 })).kind).toBe("permission_denied");
     expect(classifyError(new ApiError({ message: "boom", status: 503 })).kind).toBe("provider");
     const t = new Error("timed out"); t.name = "TimeoutError";
     expect(classifyError(t).kind).toBe("timeout");
     expect(classifyError("weird").kind).toBe("provider");
   });
   it("user messages never contain provider text", () => {
-    for (const k of ["missing_key", "invalid_key", "quota", "blocked", "bad_output", "timeout", "provider"] as const) expect(userMessage(k, "analysis")).toMatch(/rule-based/);
+    for (const k of ["missing_key", "invalid_key", "permission_denied", "model_not_found", "quota", "invalid_request", "blocked", "bad_output", "timeout", "network", "provider"] as const) expect(userMessage(k, "analysis")).toMatch(/rule-based/);
   });
 });
 
@@ -27,7 +27,7 @@ describe("routes with Gemini mocked", () => {
 
   async function load(generate: () => Promise<string>, configured = true) {
     vi.resetModules();
-    vi.doMock("../lib/server/gemini", async () => { const real = await vi.importActual<typeof import("../lib/server/gemini")>("../lib/server/gemini"); return { ...real, aiConfigured: () => configured, generate }; });
+    vi.doMock("../lib/server/gemini", async () => { const real = await vi.importActual<typeof import("../lib/server/gemini")>("../lib/server/gemini"); return { ...real, aiConfigured: () => configured, generate, generateDetailed: async () => ({ text: await generate(), model: "test-model" }) }; });
     return (await import("../app/api/analyze/route")).POST;
   }
   const a = analyzeLocal(brief);

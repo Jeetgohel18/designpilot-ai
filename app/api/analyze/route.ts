@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { aiResultSchema, analyzeLocal, fromAi } from "@/lib/engine/analyze";
-import { AiError, aiConfigured, classifyError, extractJson, generate, logAiError, userMessage } from "@/lib/server/gemini";
+import { AiError, aiConfigured, classifyError, extractJson, generateDetailed, logAiError, userMessage } from "@/lib/server/gemini";
 import { rateLimit, tooMany } from "@/lib/server/ratelimit";
 import { ROLES } from "@/lib/types";
 
@@ -27,10 +27,10 @@ export async function POST(req: Request) {
   let reason: string;
   if (aiConfigured()) {
     try {
-      const text = await generate({ system: SYSTEM, prompt: `Brief: ${brief}\nSettings: ${JSON.stringify(settings)}`, json: true, maxTokens: 8000 });
+      const { text, model } = await generateDetailed({ system: SYSTEM, prompt: `Brief: ${brief}\nSettings: ${JSON.stringify(settings)}`, json: true, maxTokens: 8000 });
       const result = aiResultSchema.safeParse(extractJson(text));
       if (!result.success) throw new AiError("bad_output");
-      return Response.json({ source: "ai", provider: "gemini", ...fromAi(result.data), notice: null });
+      return Response.json({ source: "ai", provider: "gemini", model, ...fromAi(result.data), notice: null });
     } catch (err) {
       const e = classifyError(err);
       logAiError("analyze", e);
