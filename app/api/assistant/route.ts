@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       const reply = await generate({
         system: "You are DesignPilot's design assistant embedded in a project workspace. Answer concisely (max ~150 words) using ONLY the project context. Give concrete, opinionated design advice. Never invent URLs, brands' exact hex values or statistics; say when something is a suggestion. Plain text, no markdown headings.",
         prompt: `Project context:\n${designBrief(project).slice(0, 5000)}\n\nSelected direction palette: ${d ? JSON.stringify(d.palette.colors) : "none"}\n\nUser question: ${message}`,
-        maxTokens: 800, timeoutMs: 25_000,
+        maxTokens: 800, totalMs: 24_000, thinking: "minimal",
       });
       return Response.json({ source: "ai", provider: "gemini", reply: reply.trim(), action: local.action });
     } catch (err) {

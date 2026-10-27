@@ -1,4 +1,4 @@
-import { ApiError, GoogleGenAI } from "@google/genai";
+import { ApiError, GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 // Google Gemini via the official Google Gen AI SDK. Server-only: GEMINI_API_KEY never reaches the browser.
@@ -112,44 +112,71 @@ export function classifyError(err: unknown): AiError {
 let lastGood: string | undefined; // per-instance memory so we don't re-probe retired models on every request
 
 export interface GenerateResult { text: string; model: string; elapsedMs: number }
+export interface GenerateOptions {
+  system: string; prompt: string; json?: boolean; maxTokens?: number;
+  /** TOTAL time budget for this whole call (all models, all attempts). Must be below the host's function limit. */
+  totalMs?: number;
+  /** "minimal" for short answers (fast, cheap on free quota); "low" for structured analysis. */
+  thinking?: "minimal" | "low";
+}
+const MIN_ATTEMPT_MS = 4_000;
 
-/** Call Gemini once (trying candidate models only on "model not found"). Throws AiError, never a raw provider error. */
-export async function generateDetailed(opts: { system: string; prompt: string; json?: boolean; maxTokens?: number; timeoutMs?: number }): Promise<GenerateResult> {
+/**
+ * Call Gemini once. Guarantees:
+ *  - NO SDK retries (attempts:1 pinned explicitly; retries are opt-in in this SDK version, but pinning protects us if that default ever changes);
+ *  - the whole call, across candidate models, stays inside `totalMs`;
+ *  - next candidate model is tried only after "model not found" (404), and only if time remains;
+ *  - throws AiError, never a raw provider error.
+ */
+export async function generateDetailed(opts: GenerateOptions): Promise<GenerateResult> {
   const key = process.env.GEMINI_API_KEY?.trim();
   if (!key) throw new AiError("missing_key");
-  const ai = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: opts.timeoutMs ?? 40_000 } });
+  const started = Date.now();
+  const deadline = started + (opts.totalMs ?? 40_000);
   const candidates = modelCandidates();
   const order = lastGood && candidates.includes(lastGood) ? [lastGood, ...candidates.filter((m) => m !== lastGood)] : candidates;
   let last: AiError | undefined;
+
   for (const model of order) {
+    const remaining = deadline - Date.now();
+    if (remaining < MIN_ATTEMPT_MS) { last ??= new AiError("timeout", { model, elapsedMs: Date.now() - started }); break; }
+    // Per attempt: abort slightly before the deadline so we can still answer the visitor.
+    const ai = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: remaining, retryOptions: { attempts: 1 } } });
     const t0 = Date.now();
-    try {
-      const res = await ai.models.generateContent({
-        model,
-        contents: opts.prompt,
-        config: {
-          systemInstruction: opts.system,
-          maxOutputTokens: opts.maxTokens ?? 6000,
-          temperature: opts.json ? 0.7 : 0.6,
-          ...(opts.json ? { responseMimeType: "application/json" } : {}),
-        },
-      });
-      if (res.promptFeedback?.blockReason) throw new AiError("blocked");
-      const text = res.text;
-      if (!text?.trim()) throw new AiError("bad_output");
-      lastGood = model;
-      return { text, model, elapsedMs: Date.now() - t0 };
-    } catch (err) {
-      last = classifyError(err);
-      last.model ??= model; last.elapsedMs ??= Date.now() - t0;
-      if (last.kind !== "model_not_found") throw last; // only a missing model justifies trying the next one
-      if (lastGood === model) lastGood = undefined;
+    let useThinking = true;
+    for (let pass = 0; pass < 2; pass++) {
+      try {
+        const res = await ai.models.generateContent({
+          model,
+          contents: opts.prompt,
+          config: {
+            systemInstruction: opts.system,
+            maxOutputTokens: opts.maxTokens ?? 6000,
+            temperature: opts.json ? 0.7 : 0.6,
+            ...(opts.json ? { responseMimeType: "application/json" } : {}),
+            ...(useThinking ? { thinkingConfig: { thinkingLevel: opts.thinking === "low" ? ThinkingLevel.LOW : ThinkingLevel.MINIMAL } } : {}),
+          },
+        });
+        if (res.promptFeedback?.blockReason) throw new AiError("blocked");
+        const text = res.text;
+        if (!text?.trim()) throw new AiError("bad_output");
+        lastGood = model;
+        return { text, model, elapsedMs: Date.now() - started };
+      } catch (err) {
+        last = classifyError(err);
+        last.model ??= model; last.elapsedMs ??= Date.now() - t0;
+        // A model that rejects the thinking setting: retry the SAME model once without it (bounded by the deadline).
+        if (useThinking && last.kind === "invalid_request" && /think/i.test(last.detail ?? "") && deadline - Date.now() >= MIN_ATTEMPT_MS) { useThinking = false; continue; }
+        break;
+      }
     }
+    if (!last || last.kind !== "model_not_found") throw last ?? new AiError("provider");
+    if (lastGood === model) lastGood = undefined;
   }
   throw last ?? new AiError("provider");
 }
 
-export async function generate(opts: Parameters<typeof generateDetailed>[0]): Promise<string> {
+export async function generate(opts: GenerateOptions): Promise<string> {
   return (await generateDetailed(opts)).text;
 }
 

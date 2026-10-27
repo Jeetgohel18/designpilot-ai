@@ -100,3 +100,12 @@ curl -H "Authorization: Bearer YOUR_TOKEN" "https://YOUR-SITE/api/ai-status?test
 curl -H "Authorization: Bearer YOUR_TOKEN" "https://YOUR-SITE/api/ai-status?models=1"
 ```
 The second lists the model IDs your key can really use. Vercel → your project → **Logs** also shows redacted lines such as `Gemini call failed: kind=model_not_found http=404 status=NOT_FOUND`. API keys, headers and request bodies are never returned or logged.
+
+### Timeouts
+
+Each Gemini call has one shared time budget (analysis 50s, assistant 24s, diagnostic 35s) that is always below the route limit (`maxDuration` 60s / 30s). There are no retries; a slow call ends as a labelled fallback. Short calls ask Gemini for *minimal thinking* so answers come back quickly. Developer diagnostics:
+
+- `?test=1` — tiny live call (one-word prompt, ≤32 output tokens, no tools).
+- `?test=analyze` — runs the **real project-analysis pipeline** end to end (developer token required; uses more free quota).
+
+Both report `modelUsed` and `elapsedMs` on success, and `model` + `elapsedMs` (developer view) on failure. Note: Vercel Hobby functions can run up to 60s with `maxDuration`; if your plan allows less, lower the budgets in `lib/server/analysis.ts`.
