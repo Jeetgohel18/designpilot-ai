@@ -1,7 +1,7 @@
 import { AiError, aiConfigured, classifyError, generateDetailed, isDeveloper, listUsableModels, logAiError, modelCandidates, userMessage } from "@/lib/server/gemini";
 import { rateLimit, tooMany } from "@/lib/server/ratelimit";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 // Public:
 //   GET /api/ai-status           -> is a key configured, which model(s) would be used (never the key)
@@ -38,8 +38,8 @@ export async function GET(req: Request) {
   if (!rl.ok) return tooMany(rl.retryAfter);
   if (!configured) return Response.json({ ...base, working: false, reason: "missing_key", message: friendly("missing_key") }, { headers });
   try {
-    const r = await generateDetailed({ system: "Reply with exactly one word.", prompt: "Say: ready", maxTokens: 20, timeoutMs: 15_000 });
-    return Response.json({ ...base, working: true, modelUsed: r.model, message: "Gemini responded successfully." }, { headers });
+    const r = await generateDetailed({ system: "Reply with exactly one word.", prompt: "Say: ready", maxTokens: 20, timeoutMs: 45_000 });
+    return Response.json({ ...base, working: true, modelUsed: r.model, elapsedMs: r.elapsedMs, message: "Gemini responded successfully." }, { headers });
   } catch (err) {
     const e = err instanceof AiError ? err : classifyError(err);
     logAiError("ai-status", e);

@@ -96,6 +96,14 @@ describe("model fallback + /api/ai-status responses", () => {
     const j = await (await get("?test=1", undefined, "1.0.0.1")).json();
     expect(j.working).toBe(true); expect(j.modelUsed).toBe("gemini-3.1-flash-lite"); expect(calls).toEqual(["gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]);
   });
+  it("timeouts report the model and elapsed time to developers only, and do not switch models", async () => {
+    const calls = mockSdk(() => { throw Object.assign(new Error("The operation was aborted"), { name: "AbortError" }); });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const pub = await (await get("?test=1", undefined, "1.0.1.1")).json();
+    expect(pub.reason).toBe("timeout"); expect(pub.model).toBeUndefined(); expect(pub.elapsedMs).toBeUndefined();
+    const dev = await (await get("?test=1", "dev-token-dev-token-1234", "1.0.1.2")).json();
+    expect(dev.model).toBe("gemini-3.5-flash-lite"); expect(typeof dev.elapsedMs).toBe("number"); expect(calls).toHaveLength(2);
+  });
   it("does not try other models for non-404 errors (e.g. quota)", async () => {
     const calls = mockSdk(() => { throw google(429, "RESOURCE_EXHAUSTED", "quota"); });
     vi.spyOn(console, "error").mockImplementation(() => {});

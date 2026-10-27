@@ -22,16 +22,18 @@ export interface AiDiagnostics {
   httpStatus?: number;
   providerStatus?: string; // Google's enum-like status, e.g. NOT_FOUND, RESOURCE_EXHAUSTED
   providerReason?: string; // Google's error-detail reason, e.g. API_KEY_INVALID
+  model?: string;          // which model was being called
+  elapsedMs?: number;      // how long the call ran before failing
   detail?: string;         // redacted + truncated provider message. Developer-only; never sent to the public.
 }
 
 export class AiError extends Error {
-  public status?: number; public providerStatus?: string; public providerReason?: string; public detail?: string;
+  public status?: number; public providerStatus?: string; public providerReason?: string; public detail?: string; public model?: string; public elapsedMs?: number;
   constructor(public kind: AiErrorKind, d: AiDiagnostics = {}) {
     super(kind);
-    this.status = d.httpStatus; this.providerStatus = d.providerStatus; this.providerReason = d.providerReason; this.detail = d.detail;
+    this.status = d.httpStatus; this.providerStatus = d.providerStatus; this.providerReason = d.providerReason; this.detail = d.detail; this.model = d.model; this.elapsedMs = d.elapsedMs;
   }
-  get diagnostics(): AiDiagnostics { return { httpStatus: this.status, providerStatus: this.providerStatus, providerReason: this.providerReason, detail: this.detail }; }
+  get diagnostics(): AiDiagnostics { return { httpStatus: this.status, providerStatus: this.providerStatus, providerReason: this.providerReason, model: this.model, elapsedMs: this.elapsedMs, detail: this.detail }; }
 }
 
 /** Plain-language message for the public UI. Never includes provider text. */
@@ -109,7 +111,7 @@ export function classifyError(err: unknown): AiError {
 
 let lastGood: string | undefined; // per-instance memory so we don't re-probe retired models on every request
 
-export interface GenerateResult { text: string; model: string }
+export interface GenerateResult { text: string; model: string; elapsedMs: number }
 
 /** Call Gemini once (trying candidate models only on "model not found"). Throws AiError, never a raw provider error. */
 export async function generateDetailed(opts: { system: string; prompt: string; json?: boolean; maxTokens?: number; timeoutMs?: number }): Promise<GenerateResult> {
@@ -120,6 +122,7 @@ export async function generateDetailed(opts: { system: string; prompt: string; j
   const order = lastGood && candidates.includes(lastGood) ? [lastGood, ...candidates.filter((m) => m !== lastGood)] : candidates;
   let last: AiError | undefined;
   for (const model of order) {
+    const t0 = Date.now();
     try {
       const res = await ai.models.generateContent({
         model,
@@ -135,9 +138,10 @@ export async function generateDetailed(opts: { system: string; prompt: string; j
       const text = res.text;
       if (!text?.trim()) throw new AiError("bad_output");
       lastGood = model;
-      return { text, model };
+      return { text, model, elapsedMs: Date.now() - t0 };
     } catch (err) {
       last = classifyError(err);
+      last.model ??= model; last.elapsedMs ??= Date.now() - t0;
       if (last.kind !== "model_not_found") throw last; // only a missing model justifies trying the next one
       if (lastGood === model) lastGood = undefined;
     }
@@ -173,7 +177,7 @@ export function extractJson(text: string): unknown {
 
 /** Server log line: category, HTTP status, Google's status/reason enums and a redacted, truncated message. No keys, headers or payloads. */
 export function logAiError(where: string, e: AiError) {
-  const parts = [`kind=${e.kind}`, e.status ? `http=${e.status}` : "", e.providerStatus ? `status=${e.providerStatus}` : "", e.providerReason ? `reason=${e.providerReason}` : "", e.detail ? `detail="${redact(e.detail, 200)}"` : ""].filter(Boolean);
+  const parts = [`kind=${e.kind}`, e.model ? `model=${e.model}` : "", e.elapsedMs !== undefined ? `elapsedMs=${e.elapsedMs}` : "", e.status ? `http=${e.status}` : "", e.providerStatus ? `status=${e.providerStatus}` : "", e.providerReason ? `reason=${e.providerReason}` : "", e.detail ? `detail="${redact(e.detail, 200)}"` : ""].filter(Boolean);
   console.error(`[${where}] Gemini call failed: ${parts.join(" ")}`);
 }
 
