@@ -5,7 +5,7 @@ import { ACCESSIBILITY, checklist, gridGuidance, starterSet, STATES, typeScale }
 import { uiStyleOf } from "./uistyle";
 import { referenceSearchLinks, competitorSearchLinks } from "./resources";
 import { INDUSTRIES } from "./taxonomy";
-import { BASE_CSS, GROUPS } from "./componentCss";
+import { allCss } from "../library";
 import { readableOn } from "../color";
 import { ROLES, type Direction, type Moodboard, type Project } from "../types";
 import { searchKeywords } from "../searchKeywords";
@@ -116,7 +116,7 @@ export function cssVariables(p: Project): string {
 }
 
 export function componentsCssFile(p: Project): string {
-  return `${cssVariables(p)}\n/* ===== Component styles (framework-agnostic CSS; markup examples are in the Components tab) ===== */\n${BASE_CSS.trim()}\n${GROUPS.map((g) => (g.css.startsWith("/*") ? "" : `\n/* ${g.title} */\n${g.css}`)).join("\n")}\n`;
+  return `${cssVariables(p)}\n/* ===== Component styles (framework-agnostic CSS). Markup, per component, is in the Components tab. ===== */\n${allCss()}\n`;
 }
 
 export function componentSpecs(p: Project): string {

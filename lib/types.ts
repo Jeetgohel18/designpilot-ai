@@ -101,6 +101,7 @@ export interface Project {
   altPalettes?: Palette[];
   brainstorm?: Brainstorm;
   starter?: { done: string[]; extraScreens: string[] };
+  library?: { favorites: string[]; recent: string[] };
   activity: { at: number; text: string }[];
   createdAt: number;
   updatedAt: number;
